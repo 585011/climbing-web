@@ -1,7 +1,12 @@
-export const AppRouter = () => {
-  return (
-    <main className="flex min-h-screen items-center justify-center">
-      <h1 className="text-4xl font-bold">Climbing Web</h1>
-    </main>
-  )
+import { createRouter, RouterProvider } from '@tanstack/react-router'
+import { routeTree } from './routeTree.gen'
+
+const router = createRouter({ routeTree })
+
+declare module '@tanstack/react-router' {
+  interface Register {
+    router: typeof router
+  }
 }
+
+export const AppRouter = () => <RouterProvider router={router} />

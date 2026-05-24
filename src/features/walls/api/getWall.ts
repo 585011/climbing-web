@@ -1,4 +1,4 @@
 import { apiClient } from '../../../lib/api-client'
 import type { Wall } from '../../../types/api'
 
-export const getWalls = () => apiClient.get<Wall[]>('/walls')
+export const getWall = (wallId: number) => apiClient.get<Wall>(`/walls/${wallId}`)
