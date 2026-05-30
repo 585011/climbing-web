@@ -1,32 +1,127 @@
-import { createFileRoute, Link, Outlet } from '@tanstack/react-router'
+import { useState } from 'react'
+import { createFileRoute, Outlet } from '@tanstack/react-router'
+import { useArea } from '../../features/areas/hooks/useArea'
 import { useWallsByArea } from '../../features/walls/hooks/useWallsByArea'
+import { WallCard } from '../../features/walls/components/WallCard'
+import { TabBar } from '../../components/ui/TabBar'
 
 export const Route = createFileRoute('/areas/$areaId')({
   component: AreaPage,
 })
 
+type AreaTab = 'Walls' | 'Routes' | 'Approach' | 'Info'
+const AREA_TABS = ['Walls', 'Routes', 'Approach', 'Info'] as const
+
 function AreaPage() {
   const { areaId } = Route.useParams()
   const areaIdNum = Number(areaId)
+  const [activeTab, setActiveTab] = useState<AreaTab>('Routes')
+  const { data: area, isLoading: areaLoading, isError: areaError } = useArea(areaIdNum)
+  const { data: walls, isLoading: wallsLoading } = useWallsByArea(areaIdNum)
+  const visibleTabs = (walls?.length ?? 0) > 1
+    ? AREA_TABS
+    : AREA_TABS.filter(t => t !== 'Walls')
 
   if (Number.isNaN(areaIdNum)) return <p className="p-4 text-ink-2">Invalid URL</p>
-
-  const { data: walls, isLoading, isError } = useWallsByArea(areaIdNum)
-
-  if (isLoading) return <p>Loading...</p>
-  if (isError) return <p>Something went wrong</p>
+  if (areaError) return <p className="p-4 text-ink-2">Something went wrong</p>
 
   return (
-    <div>
-      <ul>
-        {walls?.map(wall => (
-          <li key={wall.id}>
-            <Link to="/areas/$areaId/walls/$wallId" params={{ areaId, wallId: String(wall.id) }}>
-              {wall.name}
-            </Link>
-          </li>
-        ))}
-      </ul>
+    <div className="flex flex-col">
+      {/* Hero */}
+      {areaLoading ? (
+        <div className="h-52 bg-paper-2 animate-pulse" />
+      ) : (
+        <div className="relative h-52 bg-paper-2 overflow-hidden">
+          <div className="absolute inset-0 flex items-center justify-center text-ink-3 text-sm">
+            photo
+          </div>
+          <button
+            onClick={() => window.history.back()}
+            className="absolute top-4 left-4 bg-paper/80 backdrop-blur-sm rounded-full px-3 py-1.5 text-[12px] text-ink flex items-center gap-1"
+          >
+            ‹ back
+          </button>
+          <button className="absolute top-4 right-4 bg-paper/80 backdrop-blur-sm rounded-full px-3 py-1.5 text-[12px] text-ink">
+            ♡ save
+          </button>
+          {area?.region && (
+            <span className="absolute bottom-3 left-4 text-[11px] text-paper bg-ink/50 px-2 py-0.5 rounded-full">
+              {area.region}
+            </span>
+          )}
+        </div>
+      )}
+
+      {/* Area info */}
+      <div className="px-4 pt-3 pb-2">
+        {areaLoading ? (
+          <div className="flex flex-col gap-2">
+            <div className="h-7 w-2/3 bg-paper-2 animate-pulse rounded" />
+            <div className="h-4 w-1/3 bg-paper-2 animate-pulse rounded" />
+          </div>
+        ) : (
+          <>
+            <div className="flex items-baseline justify-between gap-2">
+              <h1 className="text-2xl font-bold text-ink leading-tight">{area?.name}</h1>
+              <span className="text-[13px] text-ink-2 shrink-0">
+                {walls?.length ?? 0} walls
+              </span>
+            </div>
+            <div className="flex gap-2 mt-2 flex-wrap">
+              {(['Sport', 'Boulder', 'Trad'] as const).map(style => (
+                <span
+                  key={style}
+                  className="text-[12px] border border-ink/20 rounded-full px-3 py-1 text-ink-2"
+                >
+                  {style}
+                </span>
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* Tabs */}
+      {areaLoading ? (
+        <div className="h-10 mx-4 bg-paper-2 animate-pulse rounded" />
+      ) : (
+        <TabBar tabs={visibleTabs} active={activeTab} onChange={setActiveTab} />
+      )}
+
+      {/* Tab content */}
+      {!areaLoading && (
+        <div className="flex-1">
+          {activeTab === 'Walls' && (
+            <div className="flex flex-col gap-2 px-4 py-3">
+              {wallsLoading
+                ? Array.from({ length: 3 }).map((_, i) => (
+                    <div key={i} className="h-16 bg-paper-2 animate-pulse rounded-xl" />
+                  ))
+                : walls && walls.length > 0
+                  ? walls.map(wall => (
+                      <WallCard key={wall.id} wall={wall} areaId={areaId} />
+                    ))
+                  : <p className="text-center text-ink-3 text-sm py-8">No walls yet</p>
+              }
+            </div>
+          )}
+
+          {activeTab === 'Routes' && (
+            <p className="text-center text-ink-3 text-sm py-12">Routes — coming soon</p>
+          )}
+
+          {activeTab === 'Approach' && (
+            <p className="text-center text-ink-3 text-sm py-12">Approach — coming soon</p>
+          )}
+
+          {activeTab === 'Info' && (
+            <div className="px-4 py-3 text-[14px] text-ink-2 leading-relaxed">
+              {area?.description || 'No description.'}
+            </div>
+          )}
+        </div>
+      )}
+
       <Outlet />
     </div>
   )
