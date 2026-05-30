@@ -9,10 +9,28 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TicksRouteImport } from './routes/ticks'
+import { Route as MeRouteImport } from './routes/me'
+import { Route as MapRouteImport } from './routes/map'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AreasAreaIdRouteImport } from './routes/areas.$areaId'
 import { Route as AreasAreaIdWallsWallIdRouteImport } from './routes/areas.$areaId.walls.$wallId'
 
+const TicksRoute = TicksRouteImport.update({
+  id: '/ticks',
+  path: '/ticks',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MeRoute = MeRouteImport.update({
+  id: '/me',
+  path: '/me',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MapRoute = MapRouteImport.update({
+  id: '/map',
+  path: '/map',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -31,35 +49,87 @@ const AreasAreaIdWallsWallIdRoute = AreasAreaIdWallsWallIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/map': typeof MapRoute
+  '/me': typeof MeRoute
+  '/ticks': typeof TicksRoute
   '/areas/$areaId': typeof AreasAreaIdRouteWithChildren
   '/areas/$areaId/walls/$wallId': typeof AreasAreaIdWallsWallIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/map': typeof MapRoute
+  '/me': typeof MeRoute
+  '/ticks': typeof TicksRoute
   '/areas/$areaId': typeof AreasAreaIdRouteWithChildren
   '/areas/$areaId/walls/$wallId': typeof AreasAreaIdWallsWallIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/map': typeof MapRoute
+  '/me': typeof MeRoute
+  '/ticks': typeof TicksRoute
   '/areas/$areaId': typeof AreasAreaIdRouteWithChildren
   '/areas/$areaId/walls/$wallId': typeof AreasAreaIdWallsWallIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/areas/$areaId' | '/areas/$areaId/walls/$wallId'
+  fullPaths:
+    | '/'
+    | '/map'
+    | '/me'
+    | '/ticks'
+    | '/areas/$areaId'
+    | '/areas/$areaId/walls/$wallId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/areas/$areaId' | '/areas/$areaId/walls/$wallId'
-  id: '__root__' | '/' | '/areas/$areaId' | '/areas/$areaId/walls/$wallId'
+  to:
+    | '/'
+    | '/map'
+    | '/me'
+    | '/ticks'
+    | '/areas/$areaId'
+    | '/areas/$areaId/walls/$wallId'
+  id:
+    | '__root__'
+    | '/'
+    | '/map'
+    | '/me'
+    | '/ticks'
+    | '/areas/$areaId'
+    | '/areas/$areaId/walls/$wallId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  MapRoute: typeof MapRoute
+  MeRoute: typeof MeRoute
+  TicksRoute: typeof TicksRoute
   AreasAreaIdRoute: typeof AreasAreaIdRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/ticks': {
+      id: '/ticks'
+      path: '/ticks'
+      fullPath: '/ticks'
+      preLoaderRoute: typeof TicksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/me': {
+      id: '/me'
+      path: '/me'
+      fullPath: '/me'
+      preLoaderRoute: typeof MeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/map': {
+      id: '/map'
+      path: '/map'
+      fullPath: '/map'
+      preLoaderRoute: typeof MapRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -98,6 +168,9 @@ const AreasAreaIdRouteWithChildren = AreasAreaIdRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  MapRoute: MapRoute,
+  MeRoute: MeRoute,
+  TicksRoute: TicksRoute,
   AreasAreaIdRoute: AreasAreaIdRouteWithChildren,
 }
 export const routeTree = rootRouteImport

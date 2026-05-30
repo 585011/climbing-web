@@ -7,7 +7,11 @@ export const Route = createFileRoute('/areas/$areaId')({
 
 function AreaPage() {
   const { areaId } = Route.useParams()
-  const { data: walls, isLoading, isError } = useWallsByArea(Number(areaId))
+  const areaIdNum = Number(areaId)
+
+  if (Number.isNaN(areaIdNum)) return <p className="p-4 text-ink-2">Invalid URL</p>
+
+  const { data: walls, isLoading, isError } = useWallsByArea(areaIdNum)
 
   if (isLoading) return <p>Loading...</p>
   if (isError) return <p>Something went wrong</p>
