@@ -1,5 +1,5 @@
 import { apiClient } from '../../../lib/api-client'
-import type { Walls } from '../../../types/api'
+import type { Wall } from '../../../types/api'
 
 export const getWallsByArea = (areaId: number) =>
-  apiClient.get<Walls[]>(`/climbing-areas/${areaId}/walls`)
+  apiClient.get<Wall[]>(`/climbing-areas/${areaId}/walls`)

@@ -6,7 +6,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
         ...init,
     });
     if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
-    return res.json() as Promise<T>;   
+    return res.json() as T
 }
 
 export const apiClient = {

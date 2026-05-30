@@ -19,7 +19,7 @@ export interface Wall {
   createdAt: string;
 }
 
-export interface Route {
+export interface ClimbingRoute {
   id: number;
   wallId: number;
   name: string;

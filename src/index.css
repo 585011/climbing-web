@@ -1,1 +1,16 @@
 @import "tailwindcss";
+
+@utility no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  &::-webkit-scrollbar { display: none; }
+}
+
+@theme {
+  --color-ink:     #1a1814;
+  --color-ink-2:   #4b463e;
+  --color-ink-3:   #8a8377;
+  --color-paper:   #f4f1ea;
+  --color-paper-2: #ebe6db;
+  --color-accent:  #c8553d;
+}

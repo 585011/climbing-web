@@ -8,12 +8,13 @@ export const Route = createFileRoute('/areas/$areaId/walls/$wallId')({
 
 function WallPage() {
   const { wallId } = Route.useParams()
-  console.log('wallId:', wallId)
-  const { data: wall, isLoading: wallLoading } = useWall(Number(wallId))
-  const { data: routes, isLoading: routesLoading } = useRoutesByWall(Number(wallId))
-  console.log('wall:', wall)
-  console.log('routes:', routes)
-  
+  const wallIdNum = Number(wallId)
+
+  if (Number.isNaN(wallIdNum)) return <p className="p-4 text-ink-2">Invalid URL</p>
+
+  const { data: wall, isLoading: wallLoading } = useWall(wallIdNum)
+  const { data: routes, isLoading: routesLoading } = useRoutesByWall(wallIdNum)
+
   if (wallLoading || routesLoading) return <p>Loading...</p>
 
   return (
