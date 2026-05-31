@@ -71,6 +71,13 @@ Primary users are climbers at outdoor crags on mobile — design for one-handed 
 
 Active tab is detected via `useLocation` in `src/components/ui/BottomNav.tsx`.
 
+Detail pages (not tabs):
+
+| Page | Route | State |
+|---|---|---|
+| Area (Crag) | `/areas/:areaId` | Implemented — hero, info, tabs (Routes/Walls/Approach/Info); Walls tab hidden when ≤ 1 wall |
+| Wall | `/areas/:areaId/walls/:wallId` | Stub |
+
 ## Design system
 
 > **Temporary** — these tokens were derived from early wireframes and will be replaced once a proper design system is established.
@@ -97,6 +104,7 @@ Color tokens are registered in `src/index.css` via Tailwind v4's `@theme` and us
 | Hook | Query key |
 |---|---|
 | `useAreas()` | `['areas']` |
+| `useArea(id)` | `['areas', id]` |
 | `useWall(id)` | `['walls', id]` |
 | `useWalls()` | `['walls']` |
 | `useWallsByArea(areaId)` | `['areas', areaId, 'walls']` |
@@ -107,6 +115,10 @@ Color tokens are registered in `src/index.css` via Tailwind v4's `@theme` and us
 const id = Number(param)
 if (Number.isNaN(id)) return <p>Invalid URL</p>
 ```
+
+## Design files
+
+`docs/designs/climbing-app-wireframes.html` — open in a browser to view all wireframes. Primary reference for UI decisions.
 
 ## Build notes
 

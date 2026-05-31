@@ -28,3 +28,7 @@ npm run preview  # preview production build
 ```
 
 The backend must be running at `localhost:8080` for data to load — see the [climbing-api](https://github.com/585011/climbing-api) repo.
+
+## Design
+
+Wireframes live in `docs/designs/climbing-app-wireframes.html` — open in a browser to view all screens.
