@@ -1,4 +1,8 @@
+import { z } from 'zod'
 import { apiClient } from '../../../lib/api-client'
-import type { Wall } from '../../../types/api'
+import { WallSchema, apiDataResponse } from '../../../types/api'
 
-export const getWalls = () => apiClient.get<Wall[]>('/walls')
+export const getWalls = async () => {
+  const raw = await apiClient.get('/walls')
+  return apiDataResponse(z.array(WallSchema)).parse(raw).data
+}

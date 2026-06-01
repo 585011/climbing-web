@@ -1,5 +1,8 @@
+import { z } from 'zod'
 import { apiClient } from '../../../lib/api-client'
-import type { Wall } from '../../../types/api'
+import { WallSchema } from '../../../types/api'
 
-export const getWallsByArea = (areaId: number) =>
-  apiClient.get<Wall[]>(`/climbing-areas/${areaId}/walls`)
+export const getWallsByArea = async (areaId: number) => {
+  const raw = await apiClient.get(`/climbing-areas/${areaId}/walls`)
+  return z.array(WallSchema).parse(raw)
+}

@@ -1,5 +1,7 @@
 import { apiClient } from '../../../lib/api-client'
-import type { ClimbingArea } from '../../../types/api'
+import { ClimbingAreaSchema } from '../../../types/api'
 
-export const getArea = (areaId: number) =>
-  apiClient.get<ClimbingArea>(`/climbing-areas/${areaId}`)
+export const getArea = async (areaId: number) => {
+  const raw = await apiClient.get(`/climbing-areas/${areaId}`)
+  return ClimbingAreaSchema.parse(raw)
+}

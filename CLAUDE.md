@@ -19,7 +19,8 @@ React 19 + TypeScript 6 + Vite 8 + Tailwind CSS v4, using `@vitejs/plugin-react`
 
 - **TanStack Router v1** — file-based routing; `routeTree.gen.ts` is auto-generated, do not hand-edit it
 - **TanStack Query v5** — all server state fetching and caching
-- **`apiClient`** — custom fetch wrapper in `src/lib/api-client.ts`; no axios
+- **`apiClient`** — custom fetch wrapper in `src/lib/api-client.ts`; returns `Promise<unknown>`; no axios
+- **Zod** — runtime validation of all API responses; schemas live in `src/types/api.ts`
 
 ## Project structure
 
@@ -75,7 +76,7 @@ Detail pages (not tabs):
 
 | Page | Route | State |
 |---|---|---|
-| Area (Crag) | `/areas/:areaId` | Implemented — hero, info, tabs (Routes/Walls/Approach/Info); Walls tab hidden when ≤ 1 wall |
+| Area (Crag) | `/areas/:areaId` | Implemented — hero, info, tabs (Routes/Walls/Approach/Info); Walls tab hidden when ≤ 1 wall; Approach tab shows per-wall `approachInfo` |
 | Wall | `/areas/:areaId/walls/:wallId` | Stub |
 
 ## Design system
@@ -96,6 +97,20 @@ Color tokens are registered in `src/index.css` via Tailwind v4's `@theme` and us
 `no-scrollbar` is registered as a custom `@utility` in `src/index.css` — use it to hide scrollbars on horizontally scrollable containers. It is **not** a built-in Tailwind class.
 
 ## Conventions
+
+**API types and validation:** Domain types in `src/types/api.ts` are defined as Zod schemas and inferred with `z.infer<>` — do not add plain interfaces alongside them. `apiClient` returns `Promise<unknown>`; every API function must call `.parse()` on the raw response before returning. Use the `apiDataResponse` schema helper for endpoints that wrap their payload:
+
+```ts
+// Endpoint returns { data: [...] }
+const raw = await apiClient.get('/climbing-areas')
+return apiDataResponse(z.array(ClimbingAreaSchema)).parse(raw).data
+
+// Endpoint returns a plain array
+const raw = await apiClient.get(`/climbing-areas/${id}/walls`)
+return z.array(WallSchema).parse(raw)
+```
+
+**Backend response shape:** Top-level collection endpoints (`/climbing-areas`, `/walls`, `/routes`) return `{ data: [...] }`. Sub-resource collections (`/climbing-areas/:id/walls`, `/walls/:id/routes`) and single-item endpoints return the payload directly.
 
 **Domain type naming:** The climbing route data model is `ClimbingRoute` (not `Route`) in `src/types/api.ts`. TanStack Router requires every route file to export `const Route = createFileRoute(...)`, so using `Route` as a domain type name causes a collision. Follow the same pattern for any future domain types that clash with framework names.
 

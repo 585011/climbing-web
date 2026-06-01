@@ -111,7 +111,30 @@ function AreaPage() {
           )}
 
           {activeTab === 'Approach' && (
-            <p className="text-center text-ink-3 text-sm py-12">Approach — coming soon</p>
+            <div className="flex flex-col gap-5 px-4 py-3">
+              {wallsLoading
+                ? Array.from({ length: 2 }).map((_, i) => (
+                    <div key={i} className="flex flex-col gap-2">
+                      <div className="h-4 w-1/3 bg-paper-2 animate-pulse rounded" />
+                      <div className="h-10 w-full bg-paper-2 animate-pulse rounded" />
+                    </div>
+                  ))
+                : walls && walls.length > 0
+                  ? walls.map(wall => (
+                      <div key={wall.id}>
+                        {walls.length > 1 && (
+                          <p className="text-[12px] font-semibold text-ink-2 uppercase tracking-wide mb-1">
+                            {wall.name}
+                          </p>
+                        )}
+                        <p className="text-[14px] text-ink leading-relaxed">
+                          {wall.approachInfo || <span className="text-ink-3">No approach info.</span>}
+                        </p>
+                      </div>
+                    ))
+                  : <p className="text-center text-ink-3 text-sm py-12">No approach info yet</p>
+              }
+            </div>
           )}
 
           {activeTab === 'Info' && (
