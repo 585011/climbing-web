@@ -1,5 +1,8 @@
+import { z } from 'zod'
 import { apiClient } from '../../../lib/api-client'
-import type { ClimbingRoute } from '../../../types/api'
+import { ClimbingRouteSchema } from '../../../types/api'
 
-export const getRoutesByWall = (wallId: number) =>
-  apiClient.get<ClimbingRoute[]>(`/walls/${wallId}/routes`)
+export const getRoutesByWall = async (wallId: number) => {
+  const raw = await apiClient.get(`/walls/${wallId}/routes`)
+  return z.array(ClimbingRouteSchema).parse(raw)
+}

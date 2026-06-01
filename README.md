@@ -16,6 +16,7 @@ Status: Early development
 - Tailwind CSS v4
 - TanStack Router v1 (file-based routing)
 - TanStack Query v5 (server state)
+- Zod (runtime API response validation)
 
 ## Development
 
