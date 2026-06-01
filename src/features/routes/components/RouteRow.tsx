@@ -19,9 +19,9 @@ export function RouteRow({ route, index, ticked, onTick }: RouteRowProps) {
       <div className="flex-1 min-w-0">
         <p className="text-[14px] font-semibold text-ink leading-tight truncate">{route.name}</p>
         <p className="text-[11px] text-ink-3 mt-0.5">
-          ★★★☆☆
           {route.length > 0 && <> · {route.length}m</>}
           {route.style && <> · {route.style}</>}
+          {route.bolts > 0 && <> · {route.bolts} bolts</>}
         </p>
       </div>
 
@@ -30,7 +30,7 @@ export function RouteRow({ route, index, ticked, onTick }: RouteRowProps) {
         aria-label={ticked ? 'Remove tick' : 'Tick route'}
         className={`shrink-0 w-9 h-9 flex items-center justify-center rounded-full border text-[14px] transition-colors ${
           ticked
-            ? 'border-accent bg-accent/10 text-accent'
+            ? 'broder-green-600 bg-green-600/10 text-green-600'
             : 'border-ink/20 text-ink-3'
         }`}
       >

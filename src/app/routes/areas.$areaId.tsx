@@ -3,6 +3,7 @@ import { createFileRoute, Outlet } from '@tanstack/react-router'
 import { useArea } from '../../features/areas/hooks/useArea'
 import { useWallsByArea } from '../../features/walls/hooks/useWallsByArea'
 import { WallCard } from '../../features/walls/components/WallCard'
+import { AreaRoutesList } from '../../features/routes/components/AreaRoutesList'
 import { TabBar } from '../../components/ui/TabBar'
 
 export const Route = createFileRoute('/areas/$areaId')({
@@ -107,7 +108,25 @@ function AreaPage() {
           )}
 
           {activeTab === 'Routes' && (
-            <p className="text-center text-ink-3 text-sm py-12">Routes — coming soon</p>
+            wallsLoading || !walls
+              ? (
+                <div className="divide-y divide-ink/10 px-4">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <div key={i} className="flex items-center gap-3 py-3">
+                      <div className="w-5 h-4 bg-paper-2 animate-pulse rounded" />
+                      <div className="w-10 h-7 bg-paper-2 animate-pulse rounded-lg" />
+                      <div className="flex-1 flex flex-col gap-1.5">
+                        <div className="h-4 w-2/3 bg-paper-2 animate-pulse rounded" />
+                        <div className="h-3 w-1/3 bg-paper-2 animate-pulse rounded" />
+                      </div>
+                      <div className="w-9 h-9 bg-paper-2 animate-pulse rounded-full" />
+                    </div>
+                  ))}
+                </div>
+              )
+              : walls.length === 0
+                ? <p className="text-center text-ink-3 text-sm py-12">No routes yet</p>
+                : <AreaRoutesList walls={walls} />
           )}
 
           {activeTab === 'Approach' && (
