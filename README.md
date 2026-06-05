@@ -30,6 +30,20 @@ npm run preview  # preview production build
 
 The backend must be running at `localhost:8080` for data to load — see the [climbing-api](https://github.com/585011/climbing-api) repo.
 
+## Docker
+
+Build (the API URL is baked into the bundle at build time):
+
+```bash
+docker build --build-arg VITE_API_URL=http://your-api-host/api -t climbing-web .
+```
+
+Run on port 8000:
+
+```bash
+docker run -p 8000:80 climbing-web
+```
+
 ## Design
 
 Wireframes live in `docs/designs/climbing-app-wireframes.html` — open in a browser to view all screens.
