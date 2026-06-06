@@ -56,7 +56,7 @@ function RoutePage() {
           <div className="h-3 w-1/2 bg-paper-2 animate-pulse rounded" />
         ) : (
           <p className="text-[11px] uppercase tracking-wide text-ink-3">
-            {area?.name} · {wall?.name}
+            {area?.region} · {wall?.name}
           </p>
         )}
       </div>
