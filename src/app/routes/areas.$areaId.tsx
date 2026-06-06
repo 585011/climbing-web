@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { createFileRoute, Outlet } from '@tanstack/react-router'
+import { createFileRoute, Outlet, useChildMatches } from '@tanstack/react-router'
 import { useArea } from '../../features/areas/hooks/useArea'
 import { useWallsByArea } from '../../features/walls/hooks/useWallsByArea'
 import { WallCard } from '../../features/walls/components/WallCard'
@@ -14,6 +14,9 @@ type AreaTab = 'Walls' | 'Routes' | 'Approach' | 'Info'
 const AREA_TABS = ['Walls', 'Routes', 'Approach', 'Info'] as const
 
 function AreaPage() {
+  const childMatches = useChildMatches()
+  if (childMatches.length > 0) return <Outlet />
+
   const { areaId } = Route.useParams()
   const areaIdNum = Number(areaId)
   const [activeTab, setActiveTab] = useState<AreaTab>('Routes')

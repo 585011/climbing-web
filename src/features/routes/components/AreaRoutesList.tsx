@@ -1,17 +1,32 @@
-import { useState } from 'react'
 import type { Wall } from '../../../types/api'
 import { useRoutesByWall } from '../hooks/useRoutesByWall'
+import { useTicksByUser } from '../../ticks/hooks/useTicksByUser'
+import { useCreateTick } from '../../ticks/hooks/useCreateTick'
+import { useDeleteTick } from '../../ticks/hooks/useDeleteTick'
 import { RouteRow } from './RouteRow'
+
+// TODO: replace with real user ID from auth session once auth is implemented
+const USER_ID = 1
 
 interface WallSectionProps {
   wall: Wall
   showHeader: boolean
-  ticked: Set<number>
-  onTick: (id: number) => void
 }
 
-function WallSection({ wall, showHeader, ticked, onTick }: WallSectionProps) {
+function WallSection({ wall, showHeader }: WallSectionProps) {
   const { data: routes, isLoading } = useRoutesByWall(wall.id)
+  const { data: ticksMap = new Map() } = useTicksByUser(USER_ID)
+  const { mutate: createTick } = useCreateTick()
+  const { mutate: deleteTick } = useDeleteTick()
+
+  const handleTick = (routeId: number) => {
+    const tick = ticksMap.get(routeId)
+    if (tick) {
+      deleteTick({ userId: USER_ID, tickId: tick.id })
+    } else {
+      createTick({ userId: USER_ID, routeId })
+    }
+  }
 
   if (isLoading) return (
     <div className="divide-y divide-ink/10 px-4">
@@ -44,8 +59,9 @@ function WallSection({ wall, showHeader, ticked, onTick }: WallSectionProps) {
             key={route.id}
             route={route}
             index={i + 1}
-            ticked={ticked.has(route.id)}
-            onTick={onTick}
+            ticked={ticksMap.has(route.id)}
+            onTick={handleTick}
+            areaId={String(wall.areaId)}
           />
         ))}
       </div>
@@ -58,27 +74,10 @@ interface AreaRoutesListProps {
 }
 
 export function AreaRoutesList({ walls }: AreaRoutesListProps) {
-  const [ticked, setTicked] = useState<Set<number>>(new Set())
-
-  const handleTick = (id: number) => {
-    setTicked(prev => {
-      const next = new Set(prev)
-      if (next.has(id)) next.delete(id)
-      else next.add(id)
-      return next
-    })
-  }
-
   return (
     <div className="flex flex-col">
       {walls.map(wall => (
-        <WallSection
-          key={wall.id}
-          wall={wall}
-          showHeader={walls.length > 1}
-          ticked={ticked}
-          onTick={handleTick}
-        />
+        <WallSection key={wall.id} wall={wall} showHeader={walls.length > 1} />
       ))}
     </div>
   )
