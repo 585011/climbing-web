@@ -150,7 +150,7 @@ function RoutePage() {
       </div>
 
       {/* Sticky bottom bar */}
-      <div className="fixed bottom-0 left-0 right-0 max-w-md mx-auto px-4 pb-4 pt-2 bg-paper border-t border-ink/10">
+      <div className="fixed bottom-14 left-0 right-0 max-w-md mx-auto px-4 pb-4 pt-2 bg-paper border-t border-ink/10">
         {tick ? (
           <button className="w-full py-3 rounded-xl bg-paper-2 border border-ink/20 text-[14px] font-semibold text-ink">
             Edit your tick

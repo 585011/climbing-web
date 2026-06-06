@@ -9,14 +9,12 @@ export const Route = createFileRoute('/areas/$areaId/walls/$wallId')({
 
 function WallPage() {
   const childMatches = useChildMatches()
-  if (childMatches.length > 0) return <Outlet />
-
   const { areaId, wallId } = Route.useParams()
   const wallIdNum = Number(wallId)
-
   const { data: wall, isLoading: wallLoading, isError: wallError } = useWall(wallIdNum)
   const { data: routes, isLoading: routesLoading } = useRoutesByWall(wallIdNum)
 
+  if (childMatches.length > 0) return <Outlet />
   if (Number.isNaN(wallIdNum)) return <p className="p-4 text-ink-2">Invalid URL</p>
   if (wallError) return <p className="p-4 text-ink-2">Something went wrong</p>
 

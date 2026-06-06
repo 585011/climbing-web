@@ -15,8 +15,6 @@ const AREA_TABS = ['Walls', 'Routes', 'Approach', 'Info'] as const
 
 function AreaPage() {
   const childMatches = useChildMatches()
-  if (childMatches.length > 0) return <Outlet />
-
   const { areaId } = Route.useParams()
   const areaIdNum = Number(areaId)
   const [activeTab, setActiveTab] = useState<AreaTab>('Routes')
@@ -26,6 +24,7 @@ function AreaPage() {
     ? AREA_TABS
     : AREA_TABS.filter(t => t !== 'Walls')
 
+  if (childMatches.length > 0) return <Outlet />
   if (Number.isNaN(areaIdNum)) return <p className="p-4 text-ink-2">Invalid URL</p>
   if (areaError) return <p className="p-4 text-ink-2">Something went wrong</p>
 
@@ -167,7 +166,6 @@ function AreaPage() {
         </div>
       )}
 
-      <Outlet />
     </div>
   )
 }
