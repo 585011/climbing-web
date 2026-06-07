@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, Outlet, useChildMatches } from '@tanstack/react-router'
 import { useWall } from '../../features/walls/hooks/useWall'
 import { useRoutesByWall } from '../../features/routes/hooks/useRoutesByWall'
 import { RoutesList } from '../../features/routes/components/RoutesList'
@@ -8,12 +8,13 @@ export const Route = createFileRoute('/areas/$areaId/walls/$wallId')({
 })
 
 function WallPage() {
-  const { wallId } = Route.useParams()
+  const childMatches = useChildMatches()
+  const { areaId, wallId } = Route.useParams()
   const wallIdNum = Number(wallId)
-
   const { data: wall, isLoading: wallLoading, isError: wallError } = useWall(wallIdNum)
   const { data: routes, isLoading: routesLoading } = useRoutesByWall(wallIdNum)
 
+  if (childMatches.length > 0) return <Outlet />
   if (Number.isNaN(wallIdNum)) return <p className="p-4 text-ink-2">Invalid URL</p>
   if (wallError) return <p className="p-4 text-ink-2">Something went wrong</p>
 
@@ -72,7 +73,7 @@ function WallPage() {
             ))}
           </div>
         ) : (
-          <RoutesList routes={routes ?? []} />
+          <RoutesList routes={routes ?? []} areaId={areaId} />
         )}
       </div>
     </div>

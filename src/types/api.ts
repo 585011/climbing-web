@@ -41,5 +41,17 @@ export const ClimbingRouteSchema = z.object({
 
 export type ClimbingRoute = z.infer<typeof ClimbingRouteSchema>
 
+export const UserRouteTickSchema = z.object({
+  id: z.number(),
+  userId: z.number(),
+  routeId: z.number(),
+  tickedAt: z.string(),
+  style: z.string().nullable().transform(v => v ?? ''),
+  rating: z.number().nullable().transform(v => v ?? 0),
+  personalNote: z.string().nullable().transform(v => v ?? ''),
+})
+
+export type UserRouteTick = z.infer<typeof UserRouteTickSchema>
+
 export const apiDataResponse = <T extends z.ZodTypeAny>(schema: T) =>
   z.object({ data: schema })

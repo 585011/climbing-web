@@ -50,7 +50,7 @@ Code flows in one direction: `shared → features → app`. Avoid cross-feature 
 
 Kotlin + Spring Boot 3.5 REST API backed by PostgreSQL — repo: https://github.com/585011/climbing-api
 
-- Runs at `http://localhost:8080`; Swagger UI at `/swagger-ui.html`
+- Runs at `http://localhost:8080`; Swagger UI at `http://localhost:8080/swagger-ui/index.html#/`
 - Set `VITE_API_URL` to override the base URL (e.g. for staging)
 - Layer flow: `Controller → Service → Repository` — no business logic in controllers
 - Flyway migrations in `src/main/resources/db/migration/` (`V{n}__{description}.sql`)
@@ -80,7 +80,8 @@ Detail pages (not tabs):
 | Page | Route | State |
 |---|---|---|
 | Area (Crag) | `/areas/:areaId` | Implemented — hero, info, tabs (Routes/Walls/Approach/Info); Walls tab hidden when ≤ 1 wall; Approach tab shows per-wall `approachInfo` |
-| Wall | `/areas/:areaId/walls/:wallId` | Stub |
+| Wall | `/areas/:areaId/walls/:wallId` | Implemented — hero, route list |
+| Route | `/areas/:areaId/walls/:wallId/routes/:routeId` | Shell — breadcrumb, grade, meta, topo placeholder, description, tick section |
 
 ## Design system
 
@@ -127,6 +128,8 @@ return z.array(WallSchema).parse(raw)
 | `useWalls()` | `['walls']` |
 | `useWallsByArea(areaId)` | `['areas', areaId, 'walls']` |
 | `useRoutesByWall(wallId)` | `['walls', wallId, 'routes']` |
+| `useRoute(id)` | `['routes', id]` |
+| `useTicksByUser(userId)` | `['users', userId, 'ticks']` |
 
 **URL param parsing:** TanStack Router provides URL params as strings. Always parse with `Number()` and guard with `Number.isNaN()` before passing to queries:
 ```ts

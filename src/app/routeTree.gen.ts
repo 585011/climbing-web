@@ -15,6 +15,7 @@ import { Route as MapRouteImport } from './routes/map'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AreasAreaIdRouteImport } from './routes/areas.$areaId'
 import { Route as AreasAreaIdWallsWallIdRouteImport } from './routes/areas.$areaId.walls.$wallId'
+import { Route as AreasAreaIdWallsWallIdRoutesRouteIdRouteImport } from './routes/areas.$areaId.walls.$wallId.routes.$routeId'
 
 const TicksRoute = TicksRouteImport.update({
   id: '/ticks',
@@ -46,6 +47,12 @@ const AreasAreaIdWallsWallIdRoute = AreasAreaIdWallsWallIdRouteImport.update({
   path: '/walls/$wallId',
   getParentRoute: () => AreasAreaIdRoute,
 } as any)
+const AreasAreaIdWallsWallIdRoutesRouteIdRoute =
+  AreasAreaIdWallsWallIdRoutesRouteIdRouteImport.update({
+    id: '/routes/$routeId',
+    path: '/routes/$routeId',
+    getParentRoute: () => AreasAreaIdWallsWallIdRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -53,7 +60,8 @@ export interface FileRoutesByFullPath {
   '/me': typeof MeRoute
   '/ticks': typeof TicksRoute
   '/areas/$areaId': typeof AreasAreaIdRouteWithChildren
-  '/areas/$areaId/walls/$wallId': typeof AreasAreaIdWallsWallIdRoute
+  '/areas/$areaId/walls/$wallId': typeof AreasAreaIdWallsWallIdRouteWithChildren
+  '/areas/$areaId/walls/$wallId/routes/$routeId': typeof AreasAreaIdWallsWallIdRoutesRouteIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -61,7 +69,8 @@ export interface FileRoutesByTo {
   '/me': typeof MeRoute
   '/ticks': typeof TicksRoute
   '/areas/$areaId': typeof AreasAreaIdRouteWithChildren
-  '/areas/$areaId/walls/$wallId': typeof AreasAreaIdWallsWallIdRoute
+  '/areas/$areaId/walls/$wallId': typeof AreasAreaIdWallsWallIdRouteWithChildren
+  '/areas/$areaId/walls/$wallId/routes/$routeId': typeof AreasAreaIdWallsWallIdRoutesRouteIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -70,7 +79,8 @@ export interface FileRoutesById {
   '/me': typeof MeRoute
   '/ticks': typeof TicksRoute
   '/areas/$areaId': typeof AreasAreaIdRouteWithChildren
-  '/areas/$areaId/walls/$wallId': typeof AreasAreaIdWallsWallIdRoute
+  '/areas/$areaId/walls/$wallId': typeof AreasAreaIdWallsWallIdRouteWithChildren
+  '/areas/$areaId/walls/$wallId/routes/$routeId': typeof AreasAreaIdWallsWallIdRoutesRouteIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -81,6 +91,7 @@ export interface FileRouteTypes {
     | '/ticks'
     | '/areas/$areaId'
     | '/areas/$areaId/walls/$wallId'
+    | '/areas/$areaId/walls/$wallId/routes/$routeId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -89,6 +100,7 @@ export interface FileRouteTypes {
     | '/ticks'
     | '/areas/$areaId'
     | '/areas/$areaId/walls/$wallId'
+    | '/areas/$areaId/walls/$wallId/routes/$routeId'
   id:
     | '__root__'
     | '/'
@@ -97,6 +109,7 @@ export interface FileRouteTypes {
     | '/ticks'
     | '/areas/$areaId'
     | '/areas/$areaId/walls/$wallId'
+    | '/areas/$areaId/walls/$wallId/routes/$routeId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -151,15 +164,37 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AreasAreaIdWallsWallIdRouteImport
       parentRoute: typeof AreasAreaIdRoute
     }
+    '/areas/$areaId/walls/$wallId/routes/$routeId': {
+      id: '/areas/$areaId/walls/$wallId/routes/$routeId'
+      path: '/routes/$routeId'
+      fullPath: '/areas/$areaId/walls/$wallId/routes/$routeId'
+      preLoaderRoute: typeof AreasAreaIdWallsWallIdRoutesRouteIdRouteImport
+      parentRoute: typeof AreasAreaIdWallsWallIdRoute
+    }
   }
 }
 
+interface AreasAreaIdWallsWallIdRouteChildren {
+  AreasAreaIdWallsWallIdRoutesRouteIdRoute: typeof AreasAreaIdWallsWallIdRoutesRouteIdRoute
+}
+
+const AreasAreaIdWallsWallIdRouteChildren: AreasAreaIdWallsWallIdRouteChildren =
+  {
+    AreasAreaIdWallsWallIdRoutesRouteIdRoute:
+      AreasAreaIdWallsWallIdRoutesRouteIdRoute,
+  }
+
+const AreasAreaIdWallsWallIdRouteWithChildren =
+  AreasAreaIdWallsWallIdRoute._addFileChildren(
+    AreasAreaIdWallsWallIdRouteChildren,
+  )
+
 interface AreasAreaIdRouteChildren {
-  AreasAreaIdWallsWallIdRoute: typeof AreasAreaIdWallsWallIdRoute
+  AreasAreaIdWallsWallIdRoute: typeof AreasAreaIdWallsWallIdRouteWithChildren
 }
 
 const AreasAreaIdRouteChildren: AreasAreaIdRouteChildren = {
-  AreasAreaIdWallsWallIdRoute: AreasAreaIdWallsWallIdRoute,
+  AreasAreaIdWallsWallIdRoute: AreasAreaIdWallsWallIdRouteWithChildren,
 }
 
 const AreasAreaIdRouteWithChildren = AreasAreaIdRoute._addFileChildren(
