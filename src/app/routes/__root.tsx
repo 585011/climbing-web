@@ -21,8 +21,12 @@ const RootComponent = () => {
         </p>
         <button
           onClick={() => {
-            logout({ openUrl: false })
-            loginWithRedirect({ authorizationParams: { prompt: 'select_account' } })
+            window.history.replaceState({}, document.title, window.location.pathname)
+            logout({ 
+              logoutParams: { 
+                returnTo: window.location.origin 
+              } 
+            })
           }}
           className="w-full max-w-xs bg-accent text-white rounded-xl py-3 text-sm font-semibold active:opacity-80"
         >
