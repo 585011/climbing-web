@@ -1,9 +1,22 @@
 const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:8080/api';
 
+let getToken: (() => Promise<string>) | null = null
+
+export const configureAuth = (fn: () => Promise<string>) => {
+  getToken = fn
+}
+
 async function request(path: string, init?: RequestInit): Promise<unknown> {
+    const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+    }
+    if (getToken) {
+        const token = await getToken()
+        headers['Authorization'] = `Bearer ${token}`
+    }
     const res = await fetch(`${API_BASE}${path}`, {
-        headers: { 'Content-Type': 'application/json', ...init?.headers},
         ...init,
+        headers,
     });
     if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
     if (res.status === 204) return null
