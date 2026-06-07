@@ -10,7 +10,7 @@ async function syncBackendUser(displayName: string, email: string) {
   try {
     await apiClient.get('/users/me')
   } catch (e) {
-    if (e instanceof Error && e.message.startsWith('404')) {
+    if (e instanceof Error && e.message.startsWith('404 ')) {
       try {
         await apiClient.post('/users/me', { displayName, email })
       } catch (postErr) {
