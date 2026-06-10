@@ -1,12 +1,9 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useRoute } from '../../features/routes/hooks/useRoute'
 import { useWall } from '../../features/walls/hooks/useWall'
 import { useArea } from '../../features/areas/hooks/useArea'
 import { useTicksByUser } from '../../features/ticks/hooks/useTicksByUser'
-import { useCreateTick } from '../../features/ticks/hooks/useCreateTick'
-
-// TODO: replace with real user ID from auth session once auth is implemented
-const USER_ID = 1
+import { useCurrentUser } from '../../features/users/hooks/useCurrentUser'
 
 export const Route = createFileRoute('/areas/$areaId/walls/$wallId/routes/$routeId')({
   component: RoutePage,
@@ -17,12 +14,14 @@ function RoutePage() {
   const areaIdNum = Number(areaId)
   const wallIdNum = Number(wallId)
   const routeIdNum = Number(routeId)
+  const navigate = useNavigate()
 
   const { data: area, isLoading: areaLoading } = useArea(areaIdNum)
   const { data: wall, isLoading: wallLoading } = useWall(wallIdNum)
   const { data: route, isLoading: routeLoading, isError } = useRoute(routeIdNum)
-  const { data: ticksMap = new Map() } = useTicksByUser(USER_ID)
-  const { mutate: logRoute, isPending: isLogging } = useCreateTick()
+  const { data: currentUser } = useCurrentUser()
+  const userId = currentUser?.id ?? 0
+  const { data: ticksMap = new Map() } = useTicksByUser(userId)
 
   if (Number.isNaN(areaIdNum) || Number.isNaN(wallIdNum) || Number.isNaN(routeIdNum))
     return <p className="p-4 text-ink-2">Invalid URL</p>
@@ -31,6 +30,9 @@ function RoutePage() {
 
   const isLoading = routeLoading || wallLoading || areaLoading
   const tick = route ? (ticksMap.get(route.id) ?? null) : null
+
+  const goToTickForm = () =>
+    navigate({ to: '/areas/$areaId/walls/$wallId/routes/$routeId/tick', params: { areaId, wallId, routeId } })
 
   const metaParts = [
     route && route.length > 0 ? `${route.length}m` : null,
@@ -43,7 +45,7 @@ function RoutePage() {
       {/* Header */}
       <div className="px-4 pt-4 pb-2">
         <button
-          onClick={() => window.history.back()}
+          onClick={() => navigate({ to: '/areas/$areaId/walls/$wallId', params: { areaId, wallId } })}
           className="bg-paper-2 rounded-full px-3 py-1.5 text-[12px] text-ink flex items-center gap-1 w-fit"
         >
           ‹ back
@@ -121,11 +123,11 @@ function RoutePage() {
           <>
             <div className="flex items-center justify-between mb-2">
               <p className="text-[14px] font-semibold text-ink">your tick</p>
-              <button className="text-[12px] text-ink-3">edit</button>
+              <button onClick={goToTickForm} className="text-[12px] text-ink-3">edit</button>
             </div>
-            <div className="border border-accent/40 bg-accent/5 rounded-xl p-3">
+            <div className="border border-green-600/40 bg-green-600/5 rounded-xl p-3">
               <div className="flex items-center gap-2 mb-1">
-                <span className="text-[12px] font-semibold text-accent bg-accent/10 rounded-full px-2 py-0.5">
+                <span className="text-[12px] font-semibold text-green-700 bg-accent/10 rounded-full px-2 py-0.5">
                   {tick.style || 'send'}
                 </span>
                 {tick.rating > 0 && (
@@ -150,18 +152,20 @@ function RoutePage() {
       </div>
 
       {/* Sticky bottom bar */}
-      <div className="fixed bottom-14 left-0 right-0 max-w-md mx-auto px-4 pb-4 pt-2 bg-paper border-t border-ink/10">
+      <div className="fixed bottom-14 left-0 right-0 max-w-md mx-auto px-4 pb-4 pt-2 border-ink/10">
         {tick ? (
-          <button className="w-full py-3 rounded-xl bg-paper-2 border border-ink/20 text-[14px] font-semibold text-ink">
+          <button
+            onClick={goToTickForm}
+            className="w-full py-3 rounded-xl bg-paper-2 border border-ink/20 text-[14px] font-semibold text-ink"
+          >
             Edit your tick
           </button>
         ) : (
           <button
-            onClick={() => { if (route) logRoute({ userId: USER_ID, routeId: route.id }) }}
-            disabled={isLogging || !route}
-            className="w-full py-3 rounded-xl bg-accent text-paper text-[14px] font-semibold disabled:opacity-50"
+            onClick={goToTickForm}
+            className="w-full py-3 rounded-xl bg-accent text-paper text-[14px] font-semibold"
           >
-            {isLogging ? 'Logging…' : 'Log route'}
+            Log route
           </button>
         )}
       </div>

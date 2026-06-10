@@ -3,10 +3,10 @@ import { z } from 'zod'
 export const ClimbingAreaSchema = z.object({
   id: z.number(),
   name: z.string(),
-  description: z.string(),
+  description: z.string().nullable().transform(v => v ?? ''),
   latitude: z.number(),
   longitude: z.number(),
-  region: z.string(),
+  region: z.string().nullable().transform(v => v ?? ''),
   createdAt: z.string(),
 })
 
@@ -16,10 +16,10 @@ export const WallSchema = z.object({
   id: z.number(),
   areaId: z.number(),
   name: z.string(),
-  description: z.string(),
-  latitude: z.number(),
-  longitude: z.number(),
-  approachInfo: z.string(),
+  description: z.string().nullable().transform(v => v ?? ''),
+  latitude: z.number().nullable(),
+  longitude: z.number().nullable(),
+  approachInfo: z.string().nullable().transform(v => v ?? ''),
   createdAt: z.string(),
 })
 
@@ -52,6 +52,16 @@ export const UserRouteTickSchema = z.object({
 })
 
 export type UserRouteTick = z.infer<typeof UserRouteTickSchema>
+
+export const UserSchema = z.object({
+  id: z.number(),
+  email: z.string(),
+  displayName: z.string().nullable().transform(v => v ?? ''),
+  createdAt: z.string(),
+  auth0Id: z.string(),
+})
+
+export type User = z.infer<typeof UserSchema>
 
 export const apiDataResponse = <T extends z.ZodTypeAny>(schema: T) =>
   z.object({ data: schema })

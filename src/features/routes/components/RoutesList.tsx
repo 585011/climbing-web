@@ -1,11 +1,8 @@
 import type { ClimbingRoute } from '../../../types/api'
 import { useTicksByUser } from '../../ticks/hooks/useTicksByUser'
-import { useCreateTick } from '../../ticks/hooks/useCreateTick'
 import { useDeleteTick } from '../../ticks/hooks/useDeleteTick'
+import { useCurrentUser } from '../../users/hooks/useCurrentUser'
 import { RouteRow } from './RouteRow'
-
-// TODO: replace with real user ID from auth session once auth is implemented
-const USER_ID = 1
 
 interface RoutesListProps {
   routes: ClimbingRoute[]
@@ -13,17 +10,14 @@ interface RoutesListProps {
 }
 
 export function RoutesList({ routes, areaId }: RoutesListProps) {
-  const { data: ticksMap = new Map() } = useTicksByUser(USER_ID)
-  const { mutate: createTick } = useCreateTick()
+  const { data: currentUser } = useCurrentUser()
+  const userId = currentUser?.id ?? 0
+  const { data: ticksMap = new Map() } = useTicksByUser(userId)
   const { mutate: deleteTick } = useDeleteTick()
 
-  const handleTick = (routeId: number) => {
+  const handleUntick = (routeId: number) => {
     const tick = ticksMap.get(routeId)
-    if (tick) {
-      deleteTick({ userId: USER_ID, tickId: tick.id })
-    } else {
-      createTick({ userId: USER_ID, routeId })
-    }
+    if (tick) deleteTick({ userId, tickId: tick.id })
   }
 
   if (routes.length === 0) {
@@ -38,7 +32,7 @@ export function RoutesList({ routes, areaId }: RoutesListProps) {
           route={route}
           index={i + 1}
           ticked={ticksMap.has(route.id)}
-          onTick={handleTick}
+          onUntick={handleUntick}
           areaId={areaId}
         />
       ))}
