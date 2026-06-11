@@ -122,20 +122,20 @@ function RoutePage() {
         {tick ? (
           <>
             <div className="flex items-center justify-between mb-2">
-              <p className="text-[14px] font-semibold text-ink">your tick</p>
-              <button onClick={goToTickForm} className="text-[12px] text-ink-3">edit</button>
+              <p className="text-[14px] font-semibold text-ink">Your tick</p>
+              <button onClick={goToTickForm} className="text-[12px] text-ink-3">Edit</button>
             </div>
             <div className="border border-green-600/40 bg-green-600/5 rounded-xl p-3">
               <div className="flex items-center gap-2 mb-1">
-                <span className="text-[12px] font-semibold text-green-700 bg-accent/10 rounded-full px-2 py-0.5">
+                <span className="text-[14px] font-semibold uppercase text-green-700 bg-accent/10 rounded-full px-2 py-0.5">
                   {tick.style || 'send'}
                 </span>
                 {tick.rating > 0 && (
-                  <span className="text-[12px] text-ink-2">
+                  <span className="text-[15px] text-ink-2">
                     {'★'.repeat(tick.rating)}{'☆'.repeat(5 - tick.rating)}
                   </span>
                 )}
-                <span className="text-[11px] text-ink-3 ml-auto">
+                <span className="text-[13px] text-ink-3 ml-auto">
                   {new Date(tick.tickedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: '2-digit' })}
                 </span>
               </div>

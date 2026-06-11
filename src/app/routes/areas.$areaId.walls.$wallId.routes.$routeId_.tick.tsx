@@ -131,7 +131,7 @@ function LogTickPage() {
 
       {/* Style picker */}
       <div className="px-4 mb-5">
-        <p className="text-[11px] uppercase tracking-widest text-ink-3 mb-3">How did you send it?</p>
+        <p className="text-[15px] uppercase tracking-widest text-ink-3 mb-3">How did you send it?</p>
         <div className="flex flex-col gap-2">
           {STYLES.map(s => (
             <button
@@ -162,9 +162,9 @@ function LogTickPage() {
       {/* Star rating */}
       <div className="px-4 mb-5">
         <div className="flex items-center justify-between mb-2">
-          <p className="text-[11px] uppercase tracking-widest text-ink-3">Rate</p>
+          <p className="text-[15px] uppercase tracking-widest text-ink-3">Rate</p>
           {rating > 0 && (
-            <button onClick={() => setRating(0)} className="text-[11px] text-ink-3">clear</button>
+            <button onClick={() => setRating(0)} className="rounded-full border-2 border-accent bg-accent/5 px-1 text-[15px] text-ink-3">&#10005;clear</button>
           )}
         </div>
         <div className="flex gap-2">
@@ -183,8 +183,8 @@ function LogTickPage() {
       {/* Personal note */}
       <div className="px-4 mb-4">
         <div className="flex items-center justify-between mb-2">
-          <p className="text-[11px] uppercase tracking-widest text-ink-3">Personal note</p>
-          <p className="text-[11px] text-ink-3">optional</p>
+          <p className="text-[15px] uppercase tracking-widest text-ink-3">Personal note</p>
+          <p className="text-[15px] text-ink-3">optional</p>
         </div>
         <textarea
           value={note}
