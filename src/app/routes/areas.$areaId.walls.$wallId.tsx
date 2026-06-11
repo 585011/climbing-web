@@ -1,4 +1,4 @@
-import { createFileRoute, Outlet, useChildMatches } from '@tanstack/react-router'
+import { createFileRoute, Outlet, useChildMatches, useNavigate } from '@tanstack/react-router'
 import { useWall } from '../../features/walls/hooks/useWall'
 import { useRoutesByWall } from '../../features/routes/hooks/useRoutesByWall'
 import { RoutesList } from '../../features/routes/components/RoutesList'
@@ -13,6 +13,7 @@ function WallPage() {
   const wallIdNum = Number(wallId)
   const { data: wall, isLoading: wallLoading, isError: wallError } = useWall(wallIdNum)
   const { data: routes, isLoading: routesLoading } = useRoutesByWall(wallIdNum)
+  const navigate = useNavigate()
 
   if (childMatches.length > 0) return <Outlet />
   if (Number.isNaN(wallIdNum)) return <p className="p-4 text-ink-2">Invalid URL</p>
@@ -28,7 +29,7 @@ function WallPage() {
             photo
           </div>
           <button
-            onClick={() => window.history.back()}
+            onClick={() => navigate({ to: '/' })}
             className="absolute top-4 left-4 bg-paper/80 backdrop-blur-sm rounded-full px-3 py-1.5 text-[12px] text-ink flex items-center gap-1"
           >
             ‹ back

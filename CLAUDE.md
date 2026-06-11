@@ -56,7 +56,7 @@ Kotlin + Spring Boot 3.5 REST API backed by PostgreSQL — repo: https://github.
 - Flyway migrations in `src/main/resources/db/migration/` (`V{n}__{description}.sql`)
 - Domain: `ClimbingAreas → Walls → Routes` (FK chain), plus `Users` and `UserRouteTicks`
 - Error response shape: `{ timestamp, status, error, message, path }`
-- No auth layer yet
+- Auth: Auth0 JWT; all tick endpoints enforce ownership via JWT `sub` vs `auth0_id`
 
 ## UX target
 
@@ -82,6 +82,7 @@ Detail pages (not tabs):
 | Area (Crag) | `/areas/:areaId` | Implemented — hero, info, tabs (Routes/Walls/Approach/Info); Walls tab hidden when ≤ 1 wall; Approach tab shows per-wall `approachInfo` |
 | Wall | `/areas/:areaId/walls/:wallId` | Implemented — hero, route list |
 | Route | `/areas/:areaId/walls/:wallId/routes/:routeId` | Shell — breadcrumb, grade, meta, topo placeholder, description, tick section |
+| Log a tick | `/areas/:areaId/walls/:wallId/routes/:routeId/tick` | Implemented — style picker, star rating, personal note; handles create + edit |
 
 ## Design system
 
@@ -130,6 +131,7 @@ return z.array(WallSchema).parse(raw)
 | `useRoutesByWall(wallId)` | `['walls', wallId, 'routes']` |
 | `useRoute(id)` | `['routes', id]` |
 | `useTicksByUser(userId)` | `['users', userId, 'ticks']` |
+| `useCurrentUser()` | `['users', 'me']` |
 
 **URL param parsing:** TanStack Router provides URL params as strings. Always parse with `Number()` and guard with `Number.isNaN()` before passing to queries:
 ```ts
@@ -144,6 +146,8 @@ if (Number.isNaN(id)) return <p>Invalid URL</p>
 ## Build notes
 
 **New file-based routes:** `npm run build` runs `tsc -b` before Vite, so adding a new route file will fail on the first build run — TypeScript can't see the updated `routeTree.gen.ts` yet. Fix: run `npx vite build` once first to regenerate the route tree, then `npm run build` passes cleanly.
+
+**Un-nesting routes (trailing `_`):** A dotted filename nests under its parent segment, e.g. `…routes.$routeId.tick.tsx` renders *inside* the `$routeId` route's component via its `<Outlet />`. Detail pages here (`$routeId`) render full-screen content with **no `<Outlet />`**, so a nested child silently never renders (URL changes, view doesn't). To make a route share a URL prefix but render as its own page, append `_` to the parent segment: `…routes.$routeId_.tick.tsx`. The `_` is stripped from the URL but un-nests the route — it then renders through `WallPage`'s `if (childMatches.length > 0) return <Outlet />` like the detail page does. Rename may require a `npm run dev` restart to regenerate `routeTree.gen.ts`.
 
 ## TypeScript strictness
 

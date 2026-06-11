@@ -5,16 +5,19 @@ interface RouteRowProps {
   route: ClimbingRoute
   index: number
   ticked: boolean
-  onTick: (id: number) => void
+  onUntick: (id: number) => void
   areaId: string
 }
 
-export function RouteRow({ route, index, ticked, onTick, areaId }: RouteRowProps) {
+export function RouteRow({ route, index, ticked, onUntick, areaId }: RouteRowProps) {
+  const wallId = String(route.wallId)
+  const routeId = String(route.id)
+
   return (
     <div className="flex items-center gap-3 py-3">
       <Link
         to="/areas/$areaId/walls/$wallId/routes/$routeId"
-        params={{ areaId, wallId: String(route.wallId), routeId: String(route.id) }}
+        params={{ areaId, wallId, routeId }}
         className="flex-1 flex items-center gap-3 min-w-0"
       >
         <span className="w-5 shrink-0 text-right text-[12px] text-ink-3">{index}</span>
@@ -33,17 +36,24 @@ export function RouteRow({ route, index, ticked, onTick, areaId }: RouteRowProps
         </div>
       </Link>
 
-      <button
-        onClick={() => onTick(route.id)}
-        aria-label={ticked ? 'Remove tick' : 'Tick route'}
-        className={`shrink-0 w-9 h-9 flex items-center justify-center rounded-full border text-[14px] transition-colors ${
-          ticked
-            ? 'border-green-600 bg-green-600/10 text-green-600'
-            : 'border-ink/20 text-ink-3'
-        }`}
-      >
-        {ticked ? '✓' : '+'}
-      </button>
+      {ticked ? (
+        <button
+          onClick={() => onUntick(route.id)}
+          aria-label="Remove tick"
+          className="shrink-0 w-9 h-9 flex items-center justify-center rounded-full border border-green-600 bg-green-600/10 text-green-600 text-[14px] transition-colors"
+        >
+          ✓
+        </button>
+      ) : (
+        <Link
+          to="/areas/$areaId/walls/$wallId/routes/$routeId/tick"
+          params={{ areaId, wallId, routeId }}
+          aria-label="Log tick"
+          className="shrink-0 w-9 h-9 flex items-center justify-center rounded-full border border-ink/20 text-ink-3 text-[14px]"
+        >
+          +
+        </Link>
+      )}
     </div>
   )
 }
