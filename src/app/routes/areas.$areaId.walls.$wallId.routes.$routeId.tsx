@@ -41,7 +41,7 @@ function RoutePage() {
   ].filter(Boolean)
 
   return (
-    <div className="flex flex-col min-h-full pb-20">
+    <div className="flex flex-col min-h-full">
       {/* Header */}
       <div className="px-4 pt-4 pb-2">
         <button
@@ -152,7 +152,7 @@ function RoutePage() {
       </div>
 
       {/* Sticky bottom bar */}
-      <div className="fixed bottom-14 left-0 right-0 max-w-md mx-auto px-4 pb-4 pt-2 border-ink/10">
+      <div className="px-4 pb-4 pt-2">
         {tick ? (
           <button
             onClick={goToTickForm}

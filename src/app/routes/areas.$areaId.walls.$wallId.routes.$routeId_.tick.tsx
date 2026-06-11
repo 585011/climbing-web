@@ -81,7 +81,7 @@ function LogTickPage() {
   }
 
   return (
-    <div className="flex flex-col min-h-full pb-36">
+    <div className="flex flex-col min-h-full">
       {/* Header */}
       <div className="flex items-center justify-between px-4 pt-4 pb-3">
         <button
@@ -196,7 +196,7 @@ function LogTickPage() {
       </div>
 
       {/* Floating save button */}
-      <div className="fixed bottom-16 left-0 right-0 max-w-md mx-auto px-4">
+      <div className="px-4 pb-4">
         <button
           onClick={handleSave}
           disabled={isPending}
