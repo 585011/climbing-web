@@ -1,7 +1,10 @@
 import { useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import { useAreas } from '../hooks/useAreas'
+import { useDebouncedValue } from '../../../hooks/useDebouncedValue'
 import type { ClimbingArea } from '../../../types/api'
+
+const SEARCH_MAX = 100
 
 const FILTERS = ['Nearby', 'Sport', 'Trad', 'Boulder'] as const
 type Filter = (typeof FILTERS)[number]
@@ -33,8 +36,13 @@ export const AreasList = () => {
   const [search, setSearch] = useState('')
   const [activeFilter, setActiveFilter] = useState<Filter>('Nearby')
 
+  // Keep `search` for instant input echo, but filter on the debounced value so
+  // work runs ~300ms after typing stops (this is where future server-side
+  // search will hang off).
+  const debouncedSearch = useDebouncedValue(search, 300)
+
   const filtered = areas?.filter(a =>
-    a.name.toLowerCase().includes(search.toLowerCase())
+    a.name.toLowerCase().includes(debouncedSearch.toLowerCase())
   ) ?? []
 
   return (
@@ -55,6 +63,7 @@ export const AreasList = () => {
           placeholder="Search crags, routes…"
           value={search}
           onChange={e => setSearch(e.target.value)}
+          maxLength={SEARCH_MAX}
           className="flex-1 bg-transparent text-[13px] text-ink placeholder:text-ink-3 outline-none"
         />
       </div>

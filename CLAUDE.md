@@ -9,12 +9,14 @@ npm run dev       # Start dev server with HMR
 npm run build     # Type-check + production build (tsc -b && vite build)
 npm run lint      # ESLint
 npm run preview   # Preview the production build locally
+npm test          # Run the Vitest suite once
+npm run test:watch # Vitest in watch mode
 
 docker build --build-arg VITE_API_URL=<url> -t climbing-web .   # Build image
 docker run -p 8000:80 climbing-web                               # Run container
 ```
 
-There is no test runner configured yet.
+Tests use **Vitest** + **@testing-library/react** (jsdom). Setup is `src/testing/setup.ts`; config lives in the `test` block of `vite.config.ts`. Co-locate `*.test.ts(x)` next to the code under test — the TanStack Router plugin ignores them via `routeFileIgnorePattern: '\\.test\\.'`, so test files in the routes dir never enter `routeTree.gen.ts`.
 
 ## Stack
 
@@ -116,6 +118,8 @@ return z.array(WallSchema).parse(raw)
 ```
 
 **Backend response shape:** Top-level collection endpoints (`/climbing-areas`, `/walls`, `/routes`) return `{ data: [...] }`. Sub-resource collections (`/climbing-areas/:id/walls`, `/walls/:id/routes`) and single-item endpoints return the payload directly.
+
+**Input validation:** Validate user-supplied write payloads with a dedicated request schema before sending — e.g. tick writes parse through `TickInputSchema` in `createTick`/`updateTick` (trims strings, caps the note, bounds the rating). Keep the response schema (`UserRouteTickSchema`) lenient; it parses server data, not user input. Length limits live as named constants (`PERSONAL_NOTE_MAX`) reused by the field's `maxLength`, its counter, and the schema — one source of truth. Treat all of this as **UX / defense-in-depth, not a security boundary**: the backend is the authoritative validator and must enforce the same limits. Never render user input with `dangerouslySetInnerHTML` — always go through React's default JSX escaping (`{value}`). Debounce input that drives requests/expensive work via `useDebouncedValue` (`src/hooks/`).
 
 **Domain type naming:** The climbing route data model is `ClimbingRoute` (not `Route`) in `src/types/api.ts`. TanStack Router requires every route file to export `const Route = createFileRoute(...)`, so using `Route` as a domain type name causes a collision. Follow the same pattern for any future domain types that clash with framework names.
 
