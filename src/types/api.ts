@@ -53,6 +53,27 @@ export const UserRouteTickSchema = z.object({
 
 export type UserRouteTick = z.infer<typeof UserRouteTickSchema>
 
+/**
+ * Max length for a tick's personal note. Single source of truth — referenced by
+ * the form's `maxLength`, the live counter, and `TickInputSchema` below.
+ * NOTE: client-side validation is UX / defense-in-depth only; the backend must
+ * enforce the same limit (it is the authoritative validator).
+ */
+export const PERSONAL_NOTE_MAX = 500
+
+/**
+ * Validates the tick write payload (create + update) before it leaves the client.
+ * Unlike `UserRouteTickSchema` (which leniently parses server responses), this
+ * guards user-supplied input: trims strings, caps the note, and bounds the rating.
+ */
+export const TickInputSchema = z.object({
+  style: z.string().trim().min(1).optional(),
+  rating: z.number().int().min(1).max(5).optional(),
+  personalNote: z.string().trim().max(PERSONAL_NOTE_MAX).optional(),
+})
+
+export type TickInput = z.infer<typeof TickInputSchema>
+
 export const UserSchema = z.object({
   id: z.number(),
   email: z.string(),

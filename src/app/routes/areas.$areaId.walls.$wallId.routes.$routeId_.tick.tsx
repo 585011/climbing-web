@@ -7,6 +7,7 @@ import { useCurrentUser } from '../../features/users/hooks/useCurrentUser'
 import { useTicksByUser } from '../../features/ticks/hooks/useTicksByUser'
 import { useCreateTick } from '../../features/ticks/hooks/useCreateTick'
 import { useUpdateTick } from '../../features/ticks/hooks/useUpdateTick'
+import { PERSONAL_NOTE_MAX } from '../../types/api'
 
 export const Route = createFileRoute('/areas/$areaId/walls/$wallId/routes/$routeId_/tick')({
   component: LogTickPage,
@@ -50,6 +51,10 @@ function LogTickPage() {
   const { mutate: updateTick, isPending: isUpdating } = useUpdateTick()
   const isPending = isCreating || isUpdating
 
+  // A tick records how the route was sent, so a style is required; rating and
+  // note stay optional. This gates the Save buttons against empty submissions.
+  const canSave = style.trim().length > 0
+
   if (Number.isNaN(areaIdNum) || Number.isNaN(wallIdNum) || Number.isNaN(routeIdNum))
     return <p className="p-4 text-ink-2">Invalid URL</p>
   if (isError)
@@ -61,7 +66,7 @@ function LogTickPage() {
   ].filter(Boolean)
 
   const handleSave = () => {
-    if (!route || !userId) return
+    if (!route || !userId || !canSave) return
     const data = {
       style: style || undefined,
       rating: rating > 0 ? rating : undefined,
@@ -93,7 +98,7 @@ function LogTickPage() {
         <p className="text-[15px] font-semibold text-ink">log a tick</p>
         <button
           onClick={handleSave}
-          disabled={isPending}
+          disabled={isPending || !canSave}
           className="bg-accent text-paper text-[12px] font-semibold px-3 py-1 rounded-full disabled:opacity-50"
         >
           save
@@ -191,19 +196,26 @@ function LogTickPage() {
           onChange={e => setNote(e.target.value)}
           placeholder="How did it feel? Any beta worth remembering?"
           rows={3}
+          maxLength={PERSONAL_NOTE_MAX}
           className="w-full bg-paper-2 border border-ink/15 rounded-xl px-3 py-2.5 text-[14px] text-ink placeholder:text-ink-3 resize-none focus:outline-none focus:border-ink/30"
         />
+        <p className={`text-right text-[11px] mt-1 ${note.length >= PERSONAL_NOTE_MAX ? 'text-accent' : 'text-ink-3'}`}>
+          {note.length}/{PERSONAL_NOTE_MAX}
+        </p>
       </div>
 
       {/* Floating save button */}
       <div className="px-4 pb-4">
         <button
           onClick={handleSave}
-          disabled={isPending}
+          disabled={isPending || !canSave}
           className="w-full py-3.5 rounded-full bg-ink text-paper shadow-lg text-[14px] font-semibold disabled:opacity-50"
         >
           {isPending ? 'Saving…' : 'save tick ✓'}
         </button>
+        {!canSave && (
+          <p className="text-center text-[12px] text-ink-3 mt-2">Pick how you sent it to save</p>
+        )}
       </div>
     </div>
   )

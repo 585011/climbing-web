@@ -26,6 +26,7 @@ npm run dev      # dev server at localhost:5173
 npm run build    # type-check + production build
 npm run lint     # ESLint
 npm run preview  # preview production build
+npm test         # run the Vitest suite
 ```
 
 The backend must be running at `localhost:8080` for data to load — see the [climbing-api](https://github.com/585011/climbing-api) repo.
@@ -43,6 +44,10 @@ Run on port 8000:
 ```bash
 docker run -p 8000:80 climbing-web
 ```
+
+## Security
+
+User input is length-limited on the client and rendered via React's default JSX escaping (no `dangerouslySetInnerHTML`), which mitigates XSS. Client-side validation is UX / defense-in-depth only — the backend is the authoritative validator and enforces the same limits.
 
 ## Design
 
