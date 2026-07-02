@@ -15,7 +15,7 @@ export function WallCard({ wall, areaId }: WallCardProps) {
     >
       <div className="h-12 w-12 shrink-0 rounded-lg bg-paper-2 border border-ink/10 overflow-hidden flex items-center justify-center text-ink-3 text-[10px]">
         {wall.imageUrl ? (
-          <img src={wall.imageUrl} alt="" className="h-full w-full object-cover" />
+          <img src={wall.imageUrl} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
         ) : (
           'photo'
         )}
