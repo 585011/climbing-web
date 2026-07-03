@@ -20,6 +20,8 @@ export const WallSchema = z.object({
   latitude: z.number().nullable(),
   longitude: z.number().nullable(),
   approachInfo: z.string().nullable().transform(v => v ?? ''),
+  /** Short-lived (~15 min) presigned URL — always use the latest response, never cache long-term. */
+  imageUrl: z.string().nullable(),
   createdAt: z.string(),
 })
 
@@ -73,6 +75,15 @@ export const TickInputSchema = z.object({
 })
 
 export type TickInput = z.infer<typeof TickInputSchema>
+
+/**
+ * Wall image upload limits. Single source of truth — referenced by the file
+ * input's `accept`, the pre-upload check, and tests. Client-side checks are
+ * UX / defense-in-depth only; the backend is the authoritative validator
+ * (400 VALIDATION_ERROR / 413 PAYLOAD_TOO_LARGE).
+ */
+export const WALL_IMAGE_MAX_BYTES = 20 * 1024 * 1024
+export const WALL_IMAGE_TYPES: readonly string[] = ['image/jpeg', 'image/png', 'image/webp']
 
 export const UserSchema = z.object({
   id: z.number(),

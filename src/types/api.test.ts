@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { PERSONAL_NOTE_MAX, TickInputSchema } from './api'
+import { PERSONAL_NOTE_MAX, TickInputSchema, WallSchema, WALL_IMAGE_MAX_BYTES, WALL_IMAGE_TYPES } from './api'
 
 describe('TickInputSchema', () => {
   it('accepts a note exactly at the max length', () => {
@@ -34,5 +34,35 @@ describe('TickInputSchema', () => {
 
   it('allows an entirely empty payload (all fields optional)', () => {
     expect(TickInputSchema.safeParse({}).success).toBe(true)
+  })
+})
+
+describe('WallSchema imageUrl', () => {
+  const baseWall = {
+    id: 1,
+    areaId: 2,
+    name: 'Main Wall',
+    description: null,
+    latitude: null,
+    longitude: null,
+    approachInfo: null,
+    createdAt: '2026-06-12T00:00:00Z',
+  }
+
+  it('parses a string imageUrl', () => {
+    const parsed = WallSchema.parse({ ...baseWall, imageUrl: 'https://r2.example/img.jpg?sig=x' })
+    expect(parsed.imageUrl).toBe('https://r2.example/img.jpg?sig=x')
+  })
+
+  it('parses a null imageUrl', () => {
+    const parsed = WallSchema.parse({ ...baseWall, imageUrl: null })
+    expect(parsed.imageUrl).toBeNull()
+  })
+})
+
+describe('wall image constants', () => {
+  it('caps size at 20 MB and allows exactly three MIME types', () => {
+    expect(WALL_IMAGE_MAX_BYTES).toBe(20 * 1024 * 1024)
+    expect(WALL_IMAGE_TYPES).toEqual(['image/jpeg', 'image/png', 'image/webp'])
   })
 })

@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import { createFileRoute, Outlet, useChildMatches } from '@tanstack/react-router'
 import { useArea } from '../../features/areas/hooks/useArea'
+import { AreaHeroOverlays } from '../../features/areas/components/AreaHeroOverlays'
 import { useWallsByArea } from '../../features/walls/hooks/useWallsByArea'
 import { WallCard } from '../../features/walls/components/WallCard'
+import { WallPhoto } from '../../features/walls/components/WallPhoto'
 import { AreaRoutesList } from '../../features/routes/components/AreaRoutesList'
 import { TabBar } from '../../components/ui/TabBar'
 
@@ -30,28 +32,19 @@ function AreaPage() {
 
   return (
     <div className="flex flex-col">
-      {/* Hero */}
+      {/* Hero — when the area has a single wall, it doubles as that wall's photo */}
       {areaLoading ? (
         <div className="h-52 bg-paper-2 animate-pulse" />
+      ) : walls?.length === 1 ? (
+        <WallPhoto wall={walls[0]}>
+          <AreaHeroOverlays region={area?.region} />
+        </WallPhoto>
       ) : (
         <div className="relative h-52 bg-paper-2 overflow-hidden">
           <div className="absolute inset-0 flex items-center justify-center text-ink-3 text-sm">
             photo
           </div>
-          <button
-            onClick={() => window.history.back()}
-            className="absolute top-4 left-4 bg-paper/80 backdrop-blur-sm rounded-full px-3 py-1.5 text-[12px] text-ink flex items-center gap-1"
-          >
-            ‹ back
-          </button>
-          <button className="absolute top-4 right-4 bg-paper/80 backdrop-blur-sm rounded-full px-3 py-1.5 text-[12px] text-ink">
-            ♡ save
-          </button>
-          {area?.region && (
-            <span className="absolute bottom-3 left-4 text-[11px] text-paper bg-ink/50 px-2 py-0.5 rounded-full">
-              {area.region}
-            </span>
-          )}
+          <AreaHeroOverlays region={area?.region} />
         </div>
       )}
 

@@ -2,6 +2,7 @@ import { createFileRoute, Outlet, useChildMatches, useNavigate } from '@tanstack
 import { useWall } from '../../features/walls/hooks/useWall'
 import { useRoutesByWall } from '../../features/routes/hooks/useRoutesByWall'
 import { RoutesList } from '../../features/routes/components/RoutesList'
+import { WallHero } from '../../features/walls/components/WallHero'
 
 export const Route = createFileRoute('/areas/$areaId/walls/$wallId')({
   component: WallPage,
@@ -21,21 +22,7 @@ function WallPage() {
 
   return (
     <div className="flex flex-col">
-      {wallLoading ? (
-        <div className="h-52 bg-paper-2 animate-pulse" />
-      ) : (
-        <div className="relative h-52 bg-paper-2 overflow-hidden">
-          <div className="absolute inset-0 flex items-center justify-center text-ink-3 text-sm">
-            photo
-          </div>
-          <button
-            onClick={() => navigate({ to: '/' })}
-            className="absolute top-4 left-4 bg-paper/80 backdrop-blur-sm rounded-full px-3 py-1.5 text-[12px] text-ink flex items-center gap-1"
-          >
-            ‹ back
-          </button>
-        </div>
-      )}
+      <WallHero wall={wall} loading={wallLoading} onBack={() => navigate({ to: '/' })} />
 
       <div className="px-4 pt-3 pb-2">
         {wallLoading ? (

@@ -63,4 +63,13 @@ describe('AreasList search', () => {
       '100',
     )
   })
+
+  it('shows a wall photo on cards whose area has one, placeholder otherwise', () => {
+    render(<AreasList imageByAreaId={new Map([[1, 'https://r2.example/img.jpg']])} />)
+
+    const thumb = screen.getByRole('presentation')
+    expect(thumb).toHaveAttribute('src', 'https://r2.example/img.jpg')
+    // Area 2 (Oslo) has no image — keeps the placeholder.
+    expect(screen.getByText('photo')).toBeInTheDocument()
+  })
 })
