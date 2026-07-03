@@ -15,21 +15,21 @@ const CragCard = ({ area, imageUrl }: { area: ClimbingArea; imageUrl?: string })
     params={{ areaId: String(area.id) }}
     className="flex flex-col gap-1.5 rounded-xl border border-ink/20 bg-paper p-2 active:bg-paper-2"
   >
-    <div className="h-[52px] rounded-lg bg-paper-2 border border-ink/10 overflow-hidden flex items-center justify-center text-ink-3 text-[10px]">
+    <div className="h-18 rounded-lg bg-paper-2 border border-ink/10 overflow-hidden flex items-center justify-center text-ink-3 text-[10px]">
       {imageUrl ? (
         <img src={imageUrl} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
       ) : (
         'photo'
       )}
     </div>
-    <span className="text-[13px] font-semibold text-ink leading-tight">{area.name}</span>
-    <span className="text-[11px] text-ink-3 leading-tight truncate">{area.region || area.description}</span>
+    <span className="text-[14px] font-semibold text-ink leading-tight">{area.name}</span>
+    <span className="text-[12px] text-ink-3 leading-tight truncate">{area.region || area.description}</span>
   </Link>
 )
 
 const SkeletonCard = () => (
-  <div className="flex flex-col gap-1.5 rounded-xl border border-ink/10 bg-paper p-2">
-    <div className="h-[52px] rounded-lg bg-paper-2 animate-pulse" />
+  <div className="flex flex-col gap-2 rounded-xl border border-ink/10 bg-paper p-3">
+    <div className="h-18 rounded-lg bg-paper-2 animate-pulse" />
     <div className="h-3 w-3/4 rounded bg-paper-2 animate-pulse" />
     <div className="h-2.5 w-1/2 rounded bg-paper-2 animate-pulse" />
   </div>
