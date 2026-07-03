@@ -9,14 +9,18 @@ const SEARCH_MAX = 100
 const FILTERS = ['Nearby', 'Sport', 'Trad', 'Boulder'] as const
 type Filter = (typeof FILTERS)[number]
 
-const CragCard = ({ area }: { area: ClimbingArea }) => (
+const CragCard = ({ area, imageUrl }: { area: ClimbingArea; imageUrl?: string }) => (
   <Link
     to="/areas/$areaId"
     params={{ areaId: String(area.id) }}
     className="flex flex-col gap-1.5 rounded-xl border border-ink/20 bg-paper p-2 active:bg-paper-2"
   >
-    <div className="h-[52px] rounded-lg bg-paper-2 border border-ink/10 flex items-center justify-center text-ink-3 text-[10px]">
-      photo
+    <div className="h-[52px] rounded-lg bg-paper-2 border border-ink/10 overflow-hidden flex items-center justify-center text-ink-3 text-[10px]">
+      {imageUrl ? (
+        <img src={imageUrl} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
+      ) : (
+        'photo'
+      )}
     </div>
     <span className="text-[13px] font-semibold text-ink leading-tight">{area.name}</span>
     <span className="text-[11px] text-ink-3 leading-tight truncate">{area.region || area.description}</span>
@@ -31,7 +35,12 @@ const SkeletonCard = () => (
   </div>
 )
 
-export const AreasList = () => {
+interface AreasListProps {
+  /** Area id → representative wall photo URL, resolved by the caller (short-lived presigned URLs). */
+  imageByAreaId?: Map<number, string>
+}
+
+export const AreasList = ({ imageByAreaId }: AreasListProps) => {
   const { data: areas, isLoading, isError } = useAreas()
   const [search, setSearch] = useState('')
   const [activeFilter, setActiveFilter] = useState<Filter>('Nearby')
@@ -101,7 +110,9 @@ export const AreasList = () => {
       <div className="grid grid-cols-2 gap-3">
         {isLoading
           ? Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)
-          : filtered.map(area => <CragCard key={area.id} area={area} />)
+          : filtered.map(area => (
+              <CragCard key={area.id} area={area} imageUrl={imageByAreaId?.get(area.id)} />
+            ))
         }
       </div>
     </div>
