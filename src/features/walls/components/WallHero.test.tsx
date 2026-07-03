@@ -86,7 +86,7 @@ describe('WallHero', () => {
       type: 'image/png',
     })
     fireEvent.change(input, { target: { files: [file] } })
-    expect(screen.getByText('Image is larger than 5 MB')).toBeInTheDocument()
+    expect(screen.getByText('Image is larger than 20 MB')).toBeInTheDocument()
     expect(mutate).not.toHaveBeenCalled()
   })
 

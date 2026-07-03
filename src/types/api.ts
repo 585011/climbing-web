@@ -82,7 +82,7 @@ export type TickInput = z.infer<typeof TickInputSchema>
  * UX / defense-in-depth only; the backend is the authoritative validator
  * (400 VALIDATION_ERROR / 413 PAYLOAD_TOO_LARGE).
  */
-export const WALL_IMAGE_MAX_BYTES = 5 * 1024 * 1024
+export const WALL_IMAGE_MAX_BYTES = 20 * 1024 * 1024
 export const WALL_IMAGE_TYPES: readonly string[] = ['image/jpeg', 'image/png', 'image/webp']
 
 export const UserSchema = z.object({

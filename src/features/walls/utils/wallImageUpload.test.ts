@@ -18,7 +18,7 @@ describe('validateWallImageFile', () => {
     const file = new File([new ArrayBuffer(WALL_IMAGE_MAX_BYTES + 1)], 'a.png', {
       type: 'image/png',
     })
-    expect(validateWallImageFile(file)).toBe('Image is larger than 5 MB')
+    expect(validateWallImageFile(file)).toBe('Image is larger than 20 MB')
   })
 })
 
@@ -30,7 +30,7 @@ describe('uploadErrorMessage', () => {
 
   it('maps 413 to the size message', () => {
     expect(uploadErrorMessage(new ApiError(413, 'Payload Too Large')))
-      .toBe('Image is larger than 5 MB')
+      .toBe('Image is larger than 20 MB')
   })
 
   it('maps 403 to the admin message', () => {

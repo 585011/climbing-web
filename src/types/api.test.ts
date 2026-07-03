@@ -61,8 +61,8 @@ describe('WallSchema imageUrl', () => {
 })
 
 describe('wall image constants', () => {
-  it('caps size at 5 MB and allows exactly three MIME types', () => {
-    expect(WALL_IMAGE_MAX_BYTES).toBe(5 * 1024 * 1024)
+  it('caps size at 20 MB and allows exactly three MIME types', () => {
+    expect(WALL_IMAGE_MAX_BYTES).toBe(20 * 1024 * 1024)
     expect(WALL_IMAGE_TYPES).toEqual(['image/jpeg', 'image/png', 'image/webp'])
   })
 })
