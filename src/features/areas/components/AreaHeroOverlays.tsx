@@ -8,9 +8,6 @@ export function AreaHeroOverlays({ region }: { region?: string }) {
       >
         ‹ back
       </button>
-      <button className="absolute top-4 right-4 bg-paper/80 backdrop-blur-sm rounded-full px-3 py-1.5 text-[12px] text-ink">
-        ♡ save
-      </button>
       {region && (
         <span className="absolute bottom-3 left-4 text-[11px] text-paper bg-ink/50 px-2 py-0.5 rounded-full">
           {region}
