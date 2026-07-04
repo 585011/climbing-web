@@ -1,0 +1,43 @@
+# Site address comes from the DOMAIN env var (set in the prod compose stack).
+# DOMAIN=kruxy.app enables automatic HTTPS via Let's Encrypt; when DOMAIN is
+# unset (local `docker run`), it falls back to :80 and serves plain HTTP.
+{$DOMAIN::80} {
+	root * /srv
+	encode zstd gzip
+
+	# Security headers, ported from nginx.conf. CSP notes: style-src
+	# 'unsafe-inline' is required for React inline style props
+	# (react-zoom-pan-pinch); img-src https: covers the R2 presigned image
+	# URLs; frame-src https: allows Auth0's silent-auth iframe;
+	# frame-ancestors 'none' prevents clickjacking.
+	header {
+		Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' https: data:; connect-src 'self' https:; frame-src https:; frame-ancestors 'none'; base-uri 'self'; object-src 'none'"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "camera=(), microphone=()"
+	}
+
+	# Hashed build assets are immutable — cache for a year. index.html is
+	# deliberately not matched so deploys propagate immediately. The `file`
+	# matcher limits this to assets that actually exist, so stale asset URLs
+	# falling back to index.html don't get a year-long immutable header.
+	@static {
+		path_regexp \.(js|css|svg|woff2|woff|ttf|eot|ico|png|jpg|jpeg|gif)$
+		file
+	}
+	header @static Cache-Control "public, immutable, max-age=31536000"
+
+	# Same-origin API: proxy to the Spring Boot container on the compose
+	# network. In standalone local runs there is no `api` host, so /api/*
+	# returns 502 — expected outside the compose stack.
+	handle /api/* {
+		reverse_proxy api:8080
+	}
+
+	# SPA: serve static files, fall back to index.html for client-side routes.
+	handle {
+		try_files {path} /index.html
+		file_server
+	}
+}
