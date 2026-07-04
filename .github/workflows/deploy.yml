@@ -70,7 +70,7 @@ jobs:
       - name: Health check
         run: |
           for i in $(seq 1 12); do
-            code=$(curl -s -o /dev/null -w '%{http_code}' "https://${{ vars.PROD_DOMAIN }}/") || code=000
+            code=$(curl -s --max-time 10 -o /dev/null -w '%{http_code}' "https://${{ vars.PROD_DOMAIN }}/") || code=000
             if [ "$code" = "200" ]; then echo "Healthy"; exit 0; fi
             echo "Attempt $i: HTTP $code — retrying in 5s"
             sleep 5
