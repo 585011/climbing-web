@@ -616,7 +616,7 @@ EOF
 
 **Interfaces:**
 - Consumes: repo layout from Task 4 (`/opt/climbing` clone, `.env` with `POSTGRES_USER`/`POSTGRES_DB`, compose service `postgres`).
-- Produces: a `deploy` user whose `~/.ssh/ci_deploy_key` private key becomes the `DEPLOY_SSH_KEY` GitHub secret; nightly cron at 03:00 writing `/opt/climbing/backups/climbing-YYYY-MM-DD.sql.gz`, 7-day retention.
+- Produces: a `deploy` user whose `~/.ssh/ci_deploy_key` private key becomes the `DEPLOY_SSH_KEY` GitHub secret; a manually invoked `scripts/backup.sh` writing `/opt/climbing/backups/climbing-YYYY-MM-DD.sql.gz`, 7-day retention of old dumps. No cron — backups run only when the operator triggers them.
 
 - [ ] **Step 1: Write bootstrap.sh**
 
@@ -680,12 +680,6 @@ fi
 chown -R "$DEPLOY_USER:$DEPLOY_USER" "$APP_DIR"
 install -d -o "$DEPLOY_USER" -g "$DEPLOY_USER" "$APP_DIR/backups"
 
-# --- nightly backup cron (03:00, as deploy user) ---
-cat > /etc/cron.d/climbing-backup <<EOF
-0 3 * * * $DEPLOY_USER $APP_DIR/scripts/backup.sh >> $APP_DIR/backups/backup.log 2>&1
-EOF
-chmod 644 /etc/cron.d/climbing-backup
-
 echo
 echo "Bootstrap complete."
 echo "1. Create $APP_DIR/.env from $APP_DIR/.env.example and fill in real values."
@@ -702,7 +696,9 @@ Create `/home/martin/Dokumenter/climbing-repo/climbing-deploy/scripts/backup.sh`
 
 ```bash
 #!/usr/bin/env bash
-# Nightly Postgres dump with 7-day rotation. Run by /etc/cron.d/climbing-backup.
+# Manual Postgres backup with 7-day rotation of old dumps.
+# Run on the VM as the deploy user whenever a backup is wanted
+# (especially before risky changes): /opt/climbing/scripts/backup.sh
 set -euo pipefail
 
 APP_DIR=/opt/climbing
@@ -740,11 +736,11 @@ Expected: `syntax OK`; shellcheck clean (or skipped if not installed).
 cd /home/martin/Dokumenter/climbing-repo/climbing-deploy
 git add scripts/
 git commit -m "$(cat <<'EOF'
-Add VM bootstrap and nightly backup scripts
+Add VM bootstrap and manual backup scripts
 
 bootstrap.sh: idempotent server setup (Docker, deploy user + CI SSH key,
-ufw, repo clone, backup cron). backup.sh: pg_dump to gzip with 7-day
-rotation.
+ufw, repo clone). backup.sh: manually triggered pg_dump to gzip with
+7-day rotation of old dumps.
 
 Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>
 EOF
@@ -795,8 +791,8 @@ this repo re-apply compose/config changes the same way.
 3. **Bootstrap** — as root on the VM:
    `bash <(curl -fsSL https://raw.githubusercontent.com/585011/climbing-deploy/main/scripts/bootstrap.sh)`
    It installs Docker, creates the `deploy` user, configures ufw
-   (22/80/443), clones this repo to `/opt/climbing`, installs the backup
-   cron, and prints the CI deploy key.
+   (22/80/443), clones this repo to `/opt/climbing`, and prints the CI
+   deploy key.
 4. **Secrets** — `cp /opt/climbing/.env.example /opt/climbing/.env` and fill
    in real values (as the `deploy` user).
 5. **Auth0** — in the Auth0 application settings, add `https://kruxy.app`
@@ -823,14 +819,16 @@ re-run the app repo's Deploy workflow from the last good commit
 `docker pull ghcr.io/585011/climbing-web:<good-sha> && docker tag ghcr.io/585011/climbing-web:<good-sha> ghcr.io/585011/climbing-web:latest && cd /opt/climbing && docker compose up -d web`
 (same pattern with `climbing-api` / `api`).
 
-**Backups** — nightly 03:00 `pg_dump` to `/opt/climbing/backups/`, 7-day
-retention (`/etc/cron.d/climbing-backup`). **Restore:**
+**Backups** — manual, not scheduled. On the VM run
+`/opt/climbing/scripts/backup.sh` (as the `deploy` user) to dump Postgres
+to `/opt/climbing/backups/`; dumps older than 7 days are pruned on each
+run. Take one before risky changes. **Restore:**
 `gunzip -c backups/climbing-<date>.sql.gz | docker compose exec -T postgres psql -U <POSTGRES_USER> <POSTGRES_DB>`
 
 **Rebuild a dead VM** — new VM → repeat steps 1–7 → restore latest backup →
-DNS already points at the new IP after step 2. Recovery point = last
-nightly dump (dumps live on the VM disk; off-site copies are a tracked
-follow-up).
+DNS already points at the new IP after step 2. Recovery point = the last
+manually taken dump (dumps live on the VM disk; off-site copies are a
+tracked follow-up).
 
 **Logs** — `cd /opt/climbing && docker compose logs -f --tail 100 api` (or
 `web` / `postgres`).

@@ -20,7 +20,7 @@ GitHub Actions on every push to `main` in both repos.
 | Provisioning | Manual VM creation in Hetzner console + checked-in idempotent bootstrap script (no Terraform/cloud-init) |
 | Registry | GHCR (`ghcr.io/585011/*`); both repos are public so images are public — VM pulls without credentials |
 | Auth0 | Reuse the existing Auth0 application; add the prod URL to its allowed callback/logout/origin URLs |
-| Backups | Nightly local `pg_dump` with 7-day rotation; off-site copy is an explicit follow-up, not in scope |
+| Backups | Manual: a checked-in `scripts/backup.sh` runs `pg_dump` on demand (7-day rotation of old dumps); no cron/automation. Off-site copy is an explicit follow-up, not in scope |
 | Deploy mechanism | SSH-push from GitHub Actions (build → push GHCR → SSH → `compose pull` + `up -d` + health check). Watchtower and GitOps platforms rejected for lack of deploy visibility / overkill |
 
 ## Runtime architecture
@@ -109,10 +109,11 @@ apply in production. (The API keeps its existing CORS config for local dev.)
 - **`scripts/bootstrap.sh`** — idempotent server setup run as root on a fresh
   VM: install Docker Engine + compose plugin, create a non-root `deploy`
   user (docker group, SSH key auth only), configure ufw (allow 22/80/443,
-  deny rest), clone this repo to `/opt/climbing`, install the backup cron.
-- **`scripts/backup.sh`** — nightly cron: `docker compose exec -T postgres
-  pg_dump` → gzip to `/opt/climbing/backups/`, delete dumps older than
-  7 days.
+  deny rest), clone this repo to `/opt/climbing`.
+- **`scripts/backup.sh`** — manual, run on demand by the operator:
+  `docker compose exec -T postgres pg_dump` → gzip to
+  `/opt/climbing/backups/`, delete dumps older than 7 days. Not scheduled —
+  no cron.
 - **`README.md`** — the runbook:
   1. Create CX22 in Hetzner console (Ubuntu 24.04), add SSH key.
   2. Point DNS A record for the domain at the VM IP.
@@ -183,7 +184,9 @@ credentials (public GHCR images need no pull auth).
 - **Cert issuance failure** — Caddy retries with backoff; certs persist in
   the `/data` volume so restarts never re-issue unnecessarily.
 - **VM loss** — fresh VM + bootstrap + restore latest dump + repoint DNS,
-  per runbook. Recovery point = last nightly dump. Accepted risk: dumps
+  per runbook. Recovery point = the last manually taken dump — backups
+  only exist when the operator runs `scripts/backup.sh`, so taking one
+  before risky changes is part of the runbook. Accepted risk: dumps
   live on the same disk; off-site copy (e.g. to R2) is a tracked follow-up.
 
 **Rollback:** every image is tagged `:<git-sha>`; roll back by re-running
@@ -210,7 +213,8 @@ Push a trivial commit to `main` in each repo → both workflows green → the
 change is live at `https://<DOMAIN>` within ~3 minutes, with: valid HTTPS,
 login via Auth0 works, area/wall/route browsing works, image upload works
 (R2), tick logging works, security headers present (`curl -I`), and a
-nightly backup file appears in `/opt/climbing/backups/`.
+running `scripts/backup.sh` on the VM produces a dump in
+`/opt/climbing/backups/`.
 
 ## Out of scope (tracked follow-ups)
 
