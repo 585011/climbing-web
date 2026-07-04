@@ -44,7 +44,7 @@ interface AreasListProps {
 type SortBy = 'name' | 'distance'
 
 export const AreasList = ({ imageByAreaId }: AreasListProps) => {
-  const { data: areas, isLoading, isError } = useAreas()
+  const { data: areas, isLoading, isError, refetch } = useAreas()
   const [search, setSearch] = useState('')
   const [activeFilter, setActiveFilter] = useState<Filter>('Nearby')
   const [region, setRegion] = useState('')
@@ -160,7 +160,12 @@ export const AreasList = ({ imageByAreaId }: AreasListProps) => {
 
       {/* grid */}
       {isError && (
-        <p className="text-sm text-ink-2 text-center py-8">Something went wrong</p>
+        <button
+          onClick={() => refetch()}
+          className="w-full text-sm text-ink-2 text-center py-8 active:text-ink"
+        >
+          Couldn't load crags — tap to retry
+        </button>
       )}
 
       <div className="grid grid-cols-2 gap-3">

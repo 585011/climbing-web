@@ -148,5 +148,23 @@ describe('AreasList region filter and sort', () => {
 
     expect(cardNames(container)[0]).toContain('Bratten')
     expect(sortSelect.value).toBe('name')
+describe('AreasList error state', () => {
+  it('shows a tap-to-retry message and refetches when tapped', () => {
+    const refetch = vi.fn()
+    useAreas.mockReturnValue({ data: undefined, isLoading: false, isError: true, refetch })
+
+    render(<AreasList />)
+
+    const retry = screen.getByRole('button', { name: /couldn't load crags/i })
+    fireEvent.click(retry)
+    expect(refetch).toHaveBeenCalledTimes(1)
+  })
+
+  it('does not render skeleton cards while in the error state', () => {
+    useAreas.mockReturnValue({ data: undefined, isLoading: false, isError: true, refetch: vi.fn() })
+
+    const { container } = render(<AreasList />)
+
+    expect(container.querySelector('.animate-pulse')).not.toBeInTheDocument()
   })
 })
