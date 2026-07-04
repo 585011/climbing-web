@@ -16,7 +16,7 @@ GitHub Actions on every push to `main` in both repos.
 |---|---|
 | Hosting | One Hetzner Cloud VM (CX22, 2 vCPU / 4 GB, Ubuntu 24.04 LTS) — nothing provisioned yet |
 | Domain | `kruxy.app` (user-owned), injected everywhere via a single `DOMAIN` value. Note: `.app` is HSTS-preloaded — browsers require HTTPS, which Caddy provides automatically |
-| Deploy config home | New third repo: `climbing-deploy` |
+| Deploy config home | New third repo: `climbing-deploy` — **private** (user decision at go-live). The VM accesses it over SSH with the bootstrap-generated keypair registered as a read-only GitHub deploy key; `bootstrap.sh` is delivered via `scp` (raw URLs don't work on private repos) |
 | Provisioning | Manual VM creation in Hetzner console + checked-in idempotent bootstrap script (no Terraform/cloud-init) |
 | Registry | GHCR (`ghcr.io/585011/*`); both repos are public so images are public — VM pulls without credentials |
 | Auth0 | Reuse the existing Auth0 application; add the prod URL to its allowed callback/logout/origin URLs |
@@ -173,8 +173,10 @@ keeps the container from starting → no HTTP answer → red run.
 | GitHub variables (climbing-web) | `VITE_AUTH0_DOMAIN`, `VITE_AUTH0_CLIENT_ID`, `VITE_AUTH0_AUDIENCE`, prod domain for health check |
 | VM `/opt/climbing/.env` only | DB credentials, Auth0 issuer/audience (API side), R2 keys, `DOMAIN` |
 
-GitHub never holds server-side secrets; the VM never holds GitHub
-credentials (public GHCR images need no pull auth).
+GitHub never holds server-side secrets. The VM holds no GitHub
+credentials beyond a read-only deploy key scoped to the private
+climbing-deploy repo (the GHCR images come from the public app repos and
+need no pull auth).
 
 ## Failure handling
 
