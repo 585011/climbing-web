@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, afterEach } from 'vitest'
 import { fireEvent, render, screen } from '@testing-library/react'
 
 // Capture the route's component and stub router primitives (no RouterProvider here).
@@ -31,8 +31,9 @@ vi.mock('../../features/routes/hooks/useRoute', () => ({
 vi.mock('../../features/users/hooks/useCurrentUser', () => ({
   useCurrentUser: () => ({ data: { id: 7 } }),
 }))
+const ticks = vi.hoisted(() => ({ map: new Map() }))
 vi.mock('../../features/ticks/hooks/useTicksByUser', () => ({
-  useTicksByUser: () => ({ data: new Map() }),
+  useTicksByUser: () => ({ data: ticks.map }),
 }))
 vi.mock('../../features/ticks/hooks/useCreateTick', () => ({
   useCreateTick: () => ({ mutate: vi.fn(), isPending: false }),
@@ -71,5 +72,33 @@ describe('LogTickPage validation', () => {
     expect(
       screen.getByPlaceholderText('How did it feel? Any beta worth remembering?'),
     ).toHaveAttribute('maxlength', '500')
+  })
+})
+
+describe('LogTickPage edit mode', () => {
+  afterEach(() => {
+    ticks.map = new Map()
+  })
+
+  it('prefills the form when the existing tick loads after first render', () => {
+    // Ticks query hasn't resolved yet on first render.
+    ticks.map = new Map()
+    const view = renderForm()
+
+    // …then the user's tick for this route (id 42) arrives.
+    ticks.map = new Map([
+      [42, { id: 9, style: 'flash', rating: 4, personalNote: 'crimpy start' }],
+    ])
+    const Comp = h.Captured!
+    view.rerender(<Comp />)
+
+    expect(
+      screen.getByPlaceholderText('How did it feel? Any beta worth remembering?'),
+    ).toHaveValue('crimpy start')
+    const litStars = screen
+      .getAllByText('★')
+      .filter(s => s.className.includes('text-accent'))
+    expect(litStars).toHaveLength(4)
+    expect(screen.getByRole('button', { name: 'save' })).toBeEnabled()
   })
 })
