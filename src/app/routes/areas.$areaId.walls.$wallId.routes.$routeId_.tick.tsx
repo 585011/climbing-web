@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useRoute } from '../../features/routes/hooks/useRoute'
 import { useWall } from '../../features/walls/hooks/useWall'
@@ -39,13 +39,16 @@ function LogTickPage() {
   const [rating, setRating] = useState(0)
   const [note, setNote] = useState('')
 
-  useEffect(() => {
-    if (existingTick) {
-      setStyle(existingTick.style)
-      setRating(existingTick.rating)
-      setNote(existingTick.personalNote)
-    }
-  }, [existingTick?.id])
+  // The ticks query resolves after first render, so an existing tick can
+  // appear (or change id) mid-session. Sync the form to it during render —
+  // not in an effect — per react.dev/learn/you-might-not-need-an-effect.
+  const [syncedTickId, setSyncedTickId] = useState<number | null>(null)
+  if (existingTick && existingTick.id !== syncedTickId) {
+    setSyncedTickId(existingTick.id)
+    setStyle(existingTick.style)
+    setRating(existingTick.rating)
+    setNote(existingTick.personalNote)
+  }
 
   const { mutate: createTick, isPending: isCreating } = useCreateTick()
   const { mutate: updateTick, isPending: isUpdating } = useUpdateTick()
