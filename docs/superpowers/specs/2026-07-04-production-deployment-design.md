@@ -150,8 +150,11 @@ Trigger: push to `main` + `workflow_dispatch`. Jobs in sequence:
 
 Same shape: **build+test** (`./gradlew build`) → **build-push**
 (`:latest` + `:<git-sha>`) → **deploy** (`pull api` + `up -d api`), health
-check polls `https://<DOMAIN>/api/climbing-areas` for HTTP 200. A failed
-Flyway migration keeps the container from becoming healthy → red run.
+check polls `https://<DOMAIN>/api/climbing-areas` for HTTP 200 **or 401**
+(all API endpoints require a JWT — `anyRequest().authenticated()` — so an
+unauthenticated poll sees 401; Spring only answers after full startup,
+migrations included, so 401 proves health). A failed Flyway migration
+keeps the container from starting → no HTTP answer → red run.
 
 ### Shared workflow properties
 

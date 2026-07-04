@@ -334,7 +334,7 @@ EOF
 
 **Interfaces:**
 - Consumes: existing `Dockerfile` in climbing-api (multi-stage gradle build — the docker build itself compiles the jar; the separate gradle job exists to run tests, which the Dockerfile skips via `bootJar`).
-- Produces: pushes `ghcr.io/585011/climbing-api:latest` + `:<sha>`; restarts compose service `api` (name must match Task 4). Health check: `https://kruxy.app/api/climbing-areas` (public GET) returns 200. Existing `gradle.yml` CI is left untouched.
+- Produces: pushes `ghcr.io/585011/climbing-api:latest` + `:<sha>`; restarts compose service `api` (name must match Task 4). Health check: `https://kruxy.app/api/climbing-areas` returns 200 or 401 (all endpoints require a JWT, so unauthenticated polls see 401 — still proof of full startup). Existing `gradle.yml` CI is left untouched.
 
 - [ ] **Step 1: Create the branch**
 
@@ -415,7 +415,10 @@ jobs:
         run: |
           for i in $(seq 1 24); do
             code=$(curl -s -o /dev/null -w '%{http_code}' "https://${{ vars.PROD_DOMAIN }}/api/climbing-areas") || code=000
-            if [ "$code" = "200" ]; then echo "Healthy"; exit 0; fi
+            # 401 = app is up but endpoint needs a JWT (anyRequest().authenticated()
+            # in SecurityConfig) — the app only answers after full startup, so it
+            # counts as healthy. 200 kept in case endpoints become public later.
+            if [ "$code" = "200" ] || [ "$code" = "401" ]; then echo "Healthy (HTTP $code)"; exit 0; fi
             echo "Attempt $i: HTTP $code — retrying in 5s"
             sleep 5
           done
@@ -940,7 +943,7 @@ Expected: `port 80 free`; three containers start. If the api repo's `.env` lacks
 cd /home/martin/Dokumenter/climbing-repo/climbing-deploy
 for i in $(seq 1 30); do
   code=$(curl -s -o /dev/null -w '%{http_code}' http://localhost/api/climbing-areas) || code=000
-  [ "$code" = "200" ] && break
+  { [ "$code" = "200" ] || [ "$code" = "401" ]; } && break
   sleep 3
 done
 echo "--- api through Caddy proxy: $code (want 200) ---"
