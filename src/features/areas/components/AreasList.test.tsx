@@ -148,6 +148,9 @@ describe('AreasList region filter and sort', () => {
 
     expect(cardNames(container)[0]).toContain('Bratten')
     expect(sortSelect.value).toBe('name')
+  })
+})
+
 describe('AreasList error state', () => {
   it('shows a tap-to-retry message and refetches when tapped', () => {
     const refetch = vi.fn()
