@@ -15,7 +15,7 @@ GitHub Actions on every push to `main` in both repos.
 | Decision | Choice |
 |---|---|
 | Hosting | One Hetzner Cloud VM (CX22, 2 vCPU / 4 GB, Ubuntu 24.04 LTS) — nothing provisioned yet |
-| Domain | User owns one; exact hostname decided later. Placeholder `climb.example.com` used throughout, injected everywhere via a single `DOMAIN` value |
+| Domain | `kruxy.app` (user-owned), injected everywhere via a single `DOMAIN` value. Note: `.app` is HSTS-preloaded — browsers require HTTPS, which Caddy provides automatically |
 | Deploy config home | New third repo: `climbing-deploy` |
 | Provisioning | Manual VM creation in Hetzner console + checked-in idempotent bootstrap script (no Terraform/cloud-init) |
 | Registry | GHCR (`ghcr.io/585011/*`); both repos are public so images are public — VM pulls without credentials |
