@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link } from '@tanstack/react-router'
 import { useAreas } from '../hooks/useAreas'
+import { haversineKm } from '../utils/haversineKm'
 import { useDebouncedValue } from '../../../hooks/useDebouncedValue'
 import type { ClimbingArea } from '../../../types/api'
 
@@ -40,28 +41,72 @@ interface AreasListProps {
   imageByAreaId?: Map<number, string>
 }
 
+type SortBy = 'name' | 'distance'
+
 export const AreasList = ({ imageByAreaId }: AreasListProps) => {
   const { data: areas, isLoading, isError, refetch } = useAreas()
   const [search, setSearch] = useState('')
   const [activeFilter, setActiveFilter] = useState<Filter>('Nearby')
+  const [region, setRegion] = useState('')
+  const [sortBy, setSortBy] = useState<SortBy>('name')
+  const [position, setPosition] = useState<{ latitude: number; longitude: number } | null>(null)
 
   // Keep `search` for instant input echo, but filter on the debounced value so
   // work runs ~300ms after typing stops (this is where future server-side
   // search will hang off).
   const debouncedSearch = useDebouncedValue(search, 300)
 
-  const filtered = areas?.filter(a =>
-    a.name.toLowerCase().includes(debouncedSearch.toLowerCase())
-  ) ?? []
+  const regions = [...new Set((areas ?? []).map(a => a.region).filter(Boolean))].sort()
+
+  const filtered = (areas ?? []).filter(
+    a =>
+      a.name.toLowerCase().includes(debouncedSearch.toLowerCase()) &&
+      (!region || a.region === region)
+  )
+
+  const sorted = [...filtered].sort(
+    sortBy === 'distance' && position
+      ? (a, b) => haversineKm(position, a) - haversineKm(position, b)
+      : (a, b) => a.name.localeCompare(b.name)
+  )
+
+  const handleSortChange = (value: string) => {
+    if (value !== 'distance') {
+      setSortBy('name')
+      return
+    }
+    // Geolocation is requested on demand, only when distance sort is chosen.
+    if (position) {
+      setSortBy('distance')
+      return
+    }
+    if (!navigator.geolocation) return
+    setSortBy('distance')
+    navigator.geolocation.getCurrentPosition(
+      pos => setPosition({ latitude: pos.coords.latitude, longitude: pos.coords.longitude }),
+      () => setSortBy('name')
+    )
+  }
 
   return (
     <div className="flex flex-col gap-3 px-4 pt-4 pb-2">
       {/* header */}
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold text-ink">Crags</h1>
-        <button disabled className="text-[12px] border border-ink/30 rounded-full px-3 py-1 text-ink-2 disabled:opacity-50">
-          Bergen ▾
-        </button>
+        <div className="relative">
+          <select
+            aria-label="Filter by region"
+            value={region}
+            onChange={e => setRegion(e.target.value)}
+            className="appearance-none text-[12px] border border-ink/30 rounded-full pl-3 pr-7 py-1 text-ink-2 bg-paper"
+          >
+            <option value="">All regions</option>
+            {regions.map(r => (
+              <option key={r} value={r}>{r}</option>
+            ))}
+          </select>
+          <span aria-hidden className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-ink-2">▾</span>
+        </div>
       </div>
 
       {/* search */}
@@ -97,8 +142,19 @@ export const AreasList = ({ imageByAreaId }: AreasListProps) => {
       {/* count + sort */}
       {!isLoading && !isError && (
         <div className="flex items-center justify-between">
-          <span className="text-[11px] text-ink-3">{filtered.length} crags</span>
-          <button disabled className="text-[11px] text-ink-3 disabled:opacity-50">sort: name ▾</button>
+          <span className="text-[11px] text-ink-3">{sorted.length} crags</span>
+          <div className="relative">
+            <select
+              aria-label="Sort crags"
+              value={sortBy}
+              onChange={e => handleSortChange(e.target.value)}
+              className="appearance-none text-[11px] text-ink-3 bg-transparent pr-4"
+            >
+              <option value="name">sort: name</option>
+              <option value="distance">sort: distance</option>
+            </select>
+            <span aria-hidden className="pointer-events-none absolute right-0 top-1/2 -translate-y-1/2 text-[9px] text-ink-3">▾</span>
+          </div>
         </div>
       )}
 
@@ -115,7 +171,7 @@ export const AreasList = ({ imageByAreaId }: AreasListProps) => {
       <div className="grid grid-cols-2 gap-3">
         {isLoading
           ? Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)
-          : filtered.map(area => (
+          : sorted.map(area => (
               <CragCard key={area.id} area={area} imageUrl={imageByAreaId?.get(area.id)} />
             ))
         }

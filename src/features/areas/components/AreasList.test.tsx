@@ -74,6 +74,80 @@ describe('AreasList search', () => {
   })
 })
 
+describe('AreasList region filter and sort', () => {
+  // Ulriken/Bratten near Bergen, Kolsås near Oslo — name order is
+  // Bratten, Kolsås, Ulriken; distance-from-Oslo order puts Kolsås first.
+  const testAreas: ClimbingArea[] = [
+    { ...area(1, 'Ulriken'), region: 'Bergen', latitude: 60.37, longitude: 5.39 },
+    { ...area(2, 'Kolsås'), region: 'Oslo', latitude: 59.94, longitude: 10.5 },
+    { ...area(3, 'Bratten'), region: 'Bergen', latitude: 60.4, longitude: 5.35 },
+  ]
+
+  const cardNames = (container: HTMLElement) =>
+    Array.from(container.querySelectorAll('a')).map(a => a.textContent ?? '')
+
+  beforeEach(() => {
+    useAreas.mockReturnValue({ data: testAreas, isLoading: false, isError: false })
+  })
+
+  it('offers the unique regions from the data and filters on selection', () => {
+    const { container } = render(<AreasList />)
+
+    const select = screen.getByLabelText('Filter by region')
+    const options = Array.from(select.querySelectorAll('option')).map(o => o.textContent)
+    expect(options).toEqual(['All regions', 'Bergen', 'Oslo'])
+
+    fireEvent.change(select, { target: { value: 'Bergen' } })
+
+    expect(screen.getByText('Ulriken')).toBeInTheDocument()
+    expect(screen.queryByText('Kolsås')).not.toBeInTheDocument()
+    expect(container.textContent).toContain('2 crags')
+  })
+
+  it('sorts crags by name by default', () => {
+    const { container } = render(<AreasList />)
+
+    const names = cardNames(container)
+    expect(names[0]).toContain('Bratten')
+    expect(names[1]).toContain('Kolsås')
+    expect(names[2]).toContain('Ulriken')
+  })
+
+  it('requests geolocation on demand and sorts nearest-first on distance sort', () => {
+    const getCurrentPosition = vi.fn((success: PositionCallback) =>
+      success({ coords: { latitude: 59.91, longitude: 10.75 } } as GeolocationPosition),
+    )
+    Object.defineProperty(navigator, 'geolocation', {
+      value: { getCurrentPosition },
+      configurable: true,
+    })
+
+    const { container } = render(<AreasList />)
+    expect(getCurrentPosition).not.toHaveBeenCalled()
+
+    fireEvent.change(screen.getByLabelText('Sort crags'), { target: { value: 'distance' } })
+
+    expect(getCurrentPosition).toHaveBeenCalledTimes(1)
+    // User is in Oslo — Kolsås jumps to the front.
+    expect(cardNames(container)[0]).toContain('Kolsås')
+  })
+
+  it('falls back to name sort when geolocation fails', () => {
+    const getCurrentPosition = vi.fn(
+      (_success: PositionCallback, error?: PositionErrorCallback) =>
+        error?.({ code: 1, message: 'denied' } as GeolocationPositionError),
+    )
+    Object.defineProperty(navigator, 'geolocation', {
+      value: { getCurrentPosition },
+      configurable: true,
+    })
+
+    const { container } = render(<AreasList />)
+    const sortSelect = screen.getByLabelText<HTMLSelectElement>('Sort crags')
+    fireEvent.change(sortSelect, { target: { value: 'distance' } })
+
+    expect(cardNames(container)[0]).toContain('Bratten')
+    expect(sortSelect.value).toBe('name')
 describe('AreasList error state', () => {
   it('shows a tap-to-retry message and refetches when tapped', () => {
     const refetch = vi.fn()
