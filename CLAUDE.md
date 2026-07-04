@@ -12,8 +12,8 @@ npm run preview   # Preview the production build locally
 npm test          # Run the Vitest suite once
 npm run test:watch # Vitest in watch mode
 
-docker build --build-arg VITE_API_URL=<url> -t climbing-web .   # Build image
-docker run -p 8000:80 climbing-web                               # Run container
+docker build -t climbing-web .   # Build image (args: VITE_API_URL, VITE_AUTH0_DOMAIN, VITE_AUTH0_CLIENT_ID, VITE_AUTH0_AUDIENCE)
+docker run -p 8000:80 climbing-web   # Run (Caddy, plain HTTP; set -e DOMAIN=<host> for automatic HTTPS)
 ```
 
 Tests use **Vitest** + **@testing-library/react** (jsdom). Setup is `src/testing/setup.ts`; config lives in the `test` block of `vite.config.ts`. Co-locate `*.test.ts(x)` next to the code under test — the TanStack Router plugin ignores them via `routeFileIgnorePattern: '\\.test\\.'`, so test files in the routes dir never enter `routeTree.gen.ts`.
