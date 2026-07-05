@@ -59,11 +59,25 @@ const area = (id: number): ClimbingArea => ({
   createdAt: '2026-01-01T00:00:00Z',
 })
 
+// Capture ResizeObserver callbacks so tests can fire them; jsdom has no RO.
+let roCallbacks: ResizeObserverCallback[] = []
+class MockResizeObserver {
+  constructor(cb: ResizeObserverCallback) {
+    roCallbacks.push(cb)
+  }
+  observe = vi.fn()
+  unobserve = vi.fn()
+  disconnect = vi.fn()
+}
+
 describe('MapView', () => {
   beforeEach(() => {
     MapCtor.mockClear()
     MarkerCtor.mockClear()
     mapInstance.remove.mockClear()
+    mapInstance.resize.mockClear()
+    roCallbacks = []
+    vi.stubGlobal('ResizeObserver', MockResizeObserver)
   })
 
   it('creates a MapLibre map with the OpenFreeMap style', () => {
@@ -83,5 +97,17 @@ describe('MapView', () => {
     const { unmount } = render(<MapView areas={[area(1)]} selectedId={null} onSelect={vi.fn()} />)
     unmount()
     expect(mapInstance.remove).toHaveBeenCalledTimes(1)
+  })
+
+  it('resizes the map when its container gets sized (no fullscreen needed)', () => {
+    render(<MapView areas={[area(1)]} selectedId={null} onSelect={vi.fn()} />)
+
+    // A ResizeObserver must be watching the container so the canvas fills it
+    // once layout resolves — otherwise the map inits at 0×0 and stays blank
+    // until something else (e.g. entering fullscreen) forces a resize.
+    expect(roCallbacks.length).toBeGreaterThan(0)
+
+    roCallbacks[0]([], {} as ResizeObserver)
+    expect(mapInstance.resize).toHaveBeenCalled()
   })
 })

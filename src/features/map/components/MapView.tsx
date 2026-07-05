@@ -48,6 +48,15 @@ const MapView = ({ areas, selectedId, onSelect }: MapViewProps) => {
     })
     mapRef.current = map
 
+    // The init effect runs before the browser flushes layout, so the
+    // container can still be 0×0 when MapLibre measures it — leaving the
+    // canvas blank until something forces a resize. Resize on load and
+    // whenever the container's box changes so the map fills its space
+    // without needing fullscreen.
+    map.on('load', () => map.resize())
+    const resizeObserver = new ResizeObserver(() => map.resize())
+    resizeObserver.observe(containerRef.current)
+
     // Tapping the map background clears the selection.
     map.on('click', () => onSelectRef.current(null))
 
@@ -67,6 +76,7 @@ const MapView = ({ areas, selectedId, onSelect }: MapViewProps) => {
     if (!bounds.isEmpty()) map.fitBounds(bounds, { padding: 48, maxZoom: 12, duration: 0 })
 
     return () => {
+      resizeObserver.disconnect()
       map.remove()
       mapRef.current = null
       markersRef.current.clear()
