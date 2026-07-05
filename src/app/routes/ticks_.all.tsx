@@ -5,14 +5,14 @@ import { useRoutes } from '../../features/routes/hooks/useRoutes'
 import { useWalls } from '../../features/walls/hooks/useWalls'
 import { useAreas } from '../../features/areas/hooks/useAreas'
 import { enrichTicks } from '../../features/ticks/utils/enrichTicks'
-import { TicksDashboard } from '../../features/ticks/components/TicksDashboard'
+import { TicksAllList } from '../../features/ticks/components/TicksAllList'
 
-export const Route = createFileRoute('/ticks')({
-  component: TicksPage,
+export const Route = createFileRoute('/ticks_/all')({
+  component: AllTicksPage,
 })
 
 // Cross-feature data is composed here, at the app level (see CLAUDE.md).
-function TicksPage() {
+function AllTicksPage() {
   const userQ = useCurrentUser()
   const userId = userQ.data?.id ?? 0
   const ticksQ = useTicksByUser(userId, { enabled: userId > 0 })
@@ -37,5 +37,5 @@ function TicksPage() {
     areasQ.refetch()
   }
 
-  return <TicksDashboard ticks={ticks} isLoading={isLoading} isError={isError} onRetry={onRetry} />
+  return <TicksAllList ticks={ticks} isLoading={isLoading} isError={isError} onRetry={onRetry} />
 }
