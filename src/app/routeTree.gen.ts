@@ -13,6 +13,7 @@ import { Route as TicksRouteImport } from './routes/ticks'
 import { Route as MeRouteImport } from './routes/me'
 import { Route as MapRouteImport } from './routes/map'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as TicksAllRouteImport } from './routes/ticks_.all'
 import { Route as AreasAreaIdRouteImport } from './routes/areas.$areaId'
 import { Route as AreasAreaIdWallsWallIdRouteImport } from './routes/areas.$areaId.walls.$wallId'
 import { Route as AreasAreaIdWallsWallIdRoutesRouteIdRouteImport } from './routes/areas.$areaId.walls.$wallId.routes.$routeId'
@@ -36,6 +37,11 @@ const MapRoute = MapRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TicksAllRoute = TicksAllRouteImport.update({
+  id: '/ticks_/all',
+  path: '/ticks/all',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AreasAreaIdRoute = AreasAreaIdRouteImport.update({
@@ -67,6 +73,7 @@ export interface FileRoutesByFullPath {
   '/me': typeof MeRoute
   '/ticks': typeof TicksRoute
   '/areas/$areaId': typeof AreasAreaIdRouteWithChildren
+  '/ticks/all': typeof TicksAllRoute
   '/areas/$areaId/walls/$wallId': typeof AreasAreaIdWallsWallIdRouteWithChildren
   '/areas/$areaId/walls/$wallId/routes/$routeId': typeof AreasAreaIdWallsWallIdRoutesRouteIdRoute
   '/areas/$areaId/walls/$wallId/routes/$routeId/tick': typeof AreasAreaIdWallsWallIdRoutesRouteIdTickRoute
@@ -77,6 +84,7 @@ export interface FileRoutesByTo {
   '/me': typeof MeRoute
   '/ticks': typeof TicksRoute
   '/areas/$areaId': typeof AreasAreaIdRouteWithChildren
+  '/ticks/all': typeof TicksAllRoute
   '/areas/$areaId/walls/$wallId': typeof AreasAreaIdWallsWallIdRouteWithChildren
   '/areas/$areaId/walls/$wallId/routes/$routeId': typeof AreasAreaIdWallsWallIdRoutesRouteIdRoute
   '/areas/$areaId/walls/$wallId/routes/$routeId/tick': typeof AreasAreaIdWallsWallIdRoutesRouteIdTickRoute
@@ -88,6 +96,7 @@ export interface FileRoutesById {
   '/me': typeof MeRoute
   '/ticks': typeof TicksRoute
   '/areas/$areaId': typeof AreasAreaIdRouteWithChildren
+  '/ticks_/all': typeof TicksAllRoute
   '/areas/$areaId/walls/$wallId': typeof AreasAreaIdWallsWallIdRouteWithChildren
   '/areas/$areaId/walls/$wallId/routes/$routeId': typeof AreasAreaIdWallsWallIdRoutesRouteIdRoute
   '/areas/$areaId/walls/$wallId/routes/$routeId_/tick': typeof AreasAreaIdWallsWallIdRoutesRouteIdTickRoute
@@ -100,6 +109,7 @@ export interface FileRouteTypes {
     | '/me'
     | '/ticks'
     | '/areas/$areaId'
+    | '/ticks/all'
     | '/areas/$areaId/walls/$wallId'
     | '/areas/$areaId/walls/$wallId/routes/$routeId'
     | '/areas/$areaId/walls/$wallId/routes/$routeId/tick'
@@ -110,6 +120,7 @@ export interface FileRouteTypes {
     | '/me'
     | '/ticks'
     | '/areas/$areaId'
+    | '/ticks/all'
     | '/areas/$areaId/walls/$wallId'
     | '/areas/$areaId/walls/$wallId/routes/$routeId'
     | '/areas/$areaId/walls/$wallId/routes/$routeId/tick'
@@ -120,6 +131,7 @@ export interface FileRouteTypes {
     | '/me'
     | '/ticks'
     | '/areas/$areaId'
+    | '/ticks_/all'
     | '/areas/$areaId/walls/$wallId'
     | '/areas/$areaId/walls/$wallId/routes/$routeId'
     | '/areas/$areaId/walls/$wallId/routes/$routeId_/tick'
@@ -131,6 +143,7 @@ export interface RootRouteChildren {
   MeRoute: typeof MeRoute
   TicksRoute: typeof TicksRoute
   AreasAreaIdRoute: typeof AreasAreaIdRouteWithChildren
+  TicksAllRoute: typeof TicksAllRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -161,6 +174,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ticks_/all': {
+      id: '/ticks_/all'
+      path: '/ticks/all'
+      fullPath: '/ticks/all'
+      preLoaderRoute: typeof TicksAllRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/areas/$areaId': {
@@ -230,6 +250,7 @@ const rootRouteChildren: RootRouteChildren = {
   MeRoute: MeRoute,
   TicksRoute: TicksRoute,
   AreasAreaIdRoute: AreasAreaIdRouteWithChildren,
+  TicksAllRoute: TicksAllRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
