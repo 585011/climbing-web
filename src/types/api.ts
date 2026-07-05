@@ -85,6 +85,26 @@ export type TickInput = z.infer<typeof TickInputSchema>
 export const WALL_IMAGE_MAX_BYTES = 20 * 1024 * 1024
 export const WALL_IMAGE_TYPES: readonly string[] = ['image/jpeg', 'image/png', 'image/webp']
 
+/**
+ * Display-name limits for the Me page. Mirrors the backend's
+ * UpdateUserRequest validation (NotBlank, max 100, charset pattern) —
+ * client-side checks are UX / defense-in-depth only; the backend is
+ * the authoritative validator.
+ */
+export const DISPLAY_NAME_MAX = 100
+
+export const UpdateUserInputSchema = z.object({
+  email: z.string().trim().min(1),
+  displayName: z
+    .string()
+    .trim()
+    .min(1)
+    .max(DISPLAY_NAME_MAX)
+    .regex(/^[\p{L}\p{N}\s'\-_.]*$/u, 'displayName contains invalid characters.'),
+})
+
+export type UpdateUserInput = z.infer<typeof UpdateUserInputSchema>
+
 export const UserSchema = z.object({
   id: z.number(),
   email: z.string(),
