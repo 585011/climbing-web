@@ -32,20 +32,15 @@ Navigation: dashboard `see all →` links to `/ticks/all`; its `‹ All ticks` h
 
 ## Data layer
 
-New hook `useEnrichedTicks(userId)` in `src/features/ticks/hooks/`, composing four existing queries: `useTicksByUser(userId)`, `useRoutes()`, `useWalls()`, `useAreas()`. Returns:
+CLAUDE.md forbids cross-feature imports (features compose at the app level), so the join is a **pure function**, not a hook that imports other features' hooks:
 
-```ts
-{
-  ticks: EnrichedTick[]   // { tick: UserRouteTick; route?: ClimbingRoute; wall?: Wall; area?: ClimbingArea }
-  isLoading: boolean      // any source query loading
-  isError: boolean        // any source query errored
-  refetch: () => void     // refetches all source queries
-}
-```
+`enrichTicks(ticks, routes, walls, areas): EnrichedTick[]` in `src/features/ticks/utils/enrichTicks.ts`, where `EnrichedTick = { tick: UserRouteTick; route?: ClimbingRoute; wall?: Wall; area?: ClimbingArea }` (type imports from shared `src/types/api.ts` only).
 
-- `ticks` sorted by `tickedAt` descending.
+The two route files (app layer) each compose the four existing queries — `useCurrentUser` → `useTicksByUser(userId)`, `useRoutes()`, `useWalls()`, `useAreas()` — derive combined `isLoading` / `isError` / `retry`, call `enrichTicks`, and pass everything to the feature components as props. (~15 duplicated composition lines between the two route files — accepted; extracting a shared hook would either cross features or pollute the routes dir.)
+
+- `enrichTicks` output sorted by `tickedAt` descending.
 - Joins are by id maps built from the collections. A missing route/wall/area degrades that row (fields `undefined`) — the tick still renders and still counts in totals.
-- **Future-proofing seam:** when the backend grows an enriched endpoint (e.g. `/users/{id}/ticks?expand=route`), only this hook's internals change; its return shape is the component contract. A climbing-api follow-up issue is filed as part of this work and must also mention pagination.
+- **Future-proofing seam:** when the backend grows an enriched endpoint (e.g. `/users/{id}/ticks?expand=route`), the route files swap their query composition for the new hook and `enrichTicks` retires; `EnrichedTick[]` props remain the component contract. A climbing-api follow-up issue is filed as part of this work and must also mention pagination.
 - Known limitation, accepted: `getTicksByUser` requests `?size=100`; ticks beyond 100 are invisible. Recorded in the backend follow-up issue.
 
 ## Norwegian grade utility
