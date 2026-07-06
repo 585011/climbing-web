@@ -22,6 +22,8 @@ export const WallSchema = z.object({
   approachInfo: z.string().nullable().transform(v => v ?? ''),
   /** Short-lived (~15 min) presigned URL — always use the latest response, never cache long-term. */
   imageUrl: z.string().nullable(),
+  /** Short-lived presigned URL for the small list thumbnail; may be absent on pre-backfill walls. */
+  thumbnailUrl: z.string().nullish(),
   createdAt: z.string(),
 })
 
