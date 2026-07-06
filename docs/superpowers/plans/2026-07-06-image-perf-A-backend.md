@@ -323,7 +323,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
   - `WallRepository.updateImageKeys(id: Int, imageKey: String, optimizedKey: String, thumbnailKey: String): Wall?`
   - `WallRepository.findWallsNeedingBackfill(): List<Wall>`
   - the row mapper and every SELECT/INSERT now include `optimized_key`, `thumbnail_key`.
-  - `updateImageKey` (single-arg) is **removed** — replaced by `updateImageKeys`.
+  - the existing single-arg `updateImageKey` is **kept** for now (WallService still calls it until Task 4). Do NOT remove it here: Gradle compiles main sources before test sources, so removing it breaks WallService and prevents `WallRepositoryIT` from running. Task 4 switches WallService to `updateImageKeys` and removes `updateImageKey` then.
 
 **Cross-task correction (read first):** Task 2 added `fun get(key: String): ByteArray` to the `StorageService` interface but did **not** update the existing in-memory fake in `WallControllerIT.FakeStorageConfig`, which implements `StorageService` as an anonymous object. As a result the test source tree does **not** compile on a clean build (a stale Gradle `UP-TO-DATE` masked this in Task 2). Step 0 fixes it. Also: verify by **running the test** (which forces a real test compile), not by `compileTestKotlin` alone — that task can report a stale `UP-TO-DATE`.
 
@@ -551,6 +551,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 
 **Files:**
 - Modify: `src/main/kotlin/com/example/climbingapi/service/WallService.kt`
+- Modify: `src/main/kotlin/com/example/climbingapi/repository/WallRepository.kt` (remove the now-unused single-arg `updateImageKey` — see Step 4)
 - Test: `src/test/kotlin/com/example/climbingapi/WallServiceTest.kt`
 
 **Interfaces:**
@@ -559,6 +560,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
   - `WallService.backfillImages(): BackfillResult`
   - `data class BackfillResult(val processed: Int, val failed: Int)`
   - `WallService` constructor gains an `imageVariantService: ImageVariantService` parameter.
+  - `WallRepository.updateImageKey` (single-arg) is removed once `WallService` no longer calls it.
 
 - [ ] **Step 1: Update the existing test fixture + add new tests**
 
@@ -803,15 +805,19 @@ import org.slf4j.LoggerFactory
     }
 ```
 
-- [ ] **Step 4: Run the tests to verify they pass**
+- [ ] **Step 4: Remove the now-unused single-arg `updateImageKey`**
+
+`WallService` no longer calls `WallRepository.updateImageKey` (both `replaceImage` and `backfillImages` use `updateImageKeys`). Delete the entire `updateImageKey(id: Int, imageKey: String): Wall?` function from `src/main/kotlin/com/example/climbingapi/repository/WallRepository.kt` (Task 3 deliberately kept it so main compiled; it is dead now). Leave `updateImageKeys` and everything else intact.
+
+- [ ] **Step 5: Run the tests to verify they pass**
 
 Run: `./gradlew test --tests 'com.example.climbingapi.WallServiceTest'`
-Expected: PASS (existing tests + 4 new).
+Expected: PASS (existing tests + 4 new). This forces a real main+test compile, confirming the `updateImageKey` removal left no dangling references.
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 6: Commit**
 
 ```bash
-git add src/main/kotlin/com/example/climbingapi/service/WallService.kt src/test/kotlin/com/example/climbingapi/WallServiceTest.kt
+git add src/main/kotlin/com/example/climbingapi/service/WallService.kt src/main/kotlin/com/example/climbingapi/repository/WallRepository.kt src/test/kotlin/com/example/climbingapi/WallServiceTest.kt
 git commit -m "feat: generate and store image variants on upload; add backfill
 
 Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
