@@ -75,7 +75,7 @@ This keeps unprocessed walls rendering (at large size) until the backfill runs.
 
 ## Frontend design (climbing-web)
 
-- `WallSchema` (`src/types/api.ts`) gains `thumbnailUrl: z.string().nullable()`.
+- `WallSchema` (`src/types/api.ts`) gains `thumbnailUrl: z.string().nullish()` (accepts string, null, or absent — a wall predating the backend deploy still parses).
 - `src/app/routes/index.tsx` builds `imageByAreaId` from `wall.thumbnailUrl ?? wall.imageUrl` (thumbnail for the crag list, original-fallback if a wall predates backfill).
 - Wall and area hero components already consume `imageUrl` (now the optimized variant) — they benefit with no code change.
 - Update the affected tests (`getWalls`/schema test, `index` crag-list test) for the new field.
