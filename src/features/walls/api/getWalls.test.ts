@@ -15,4 +15,45 @@ describe('getWalls', () => {
     await getWalls()
     expect(get).toHaveBeenCalledWith('/walls?size=100')
   })
+
+  it('parses thumbnailUrl through the wall schema', async () => {
+    get.mockResolvedValue({
+      data: [
+        {
+          id: 1,
+          areaId: 2,
+          name: 'Main Wall',
+          description: null,
+          latitude: null,
+          longitude: null,
+          approachInfo: null,
+          imageUrl: 'http://img/full.jpg',
+          thumbnailUrl: 'http://img/thumb.jpg',
+          createdAt: '2026-01-01T00:00:00Z',
+        },
+      ],
+    })
+    const walls = await getWalls()
+    expect(walls[0].thumbnailUrl).toBe('http://img/thumb.jpg')
+  })
+
+  it('accepts a wall with no thumbnailUrl field (pre-backfill record)', async () => {
+    get.mockResolvedValue({
+      data: [
+        {
+          id: 1,
+          areaId: 2,
+          name: 'Old Wall',
+          description: null,
+          latitude: null,
+          longitude: null,
+          approachInfo: null,
+          imageUrl: 'http://img/full.jpg',
+          createdAt: '2026-01-01T00:00:00Z',
+        },
+      ],
+    })
+    const walls = await getWalls()
+    expect(walls[0].thumbnailUrl ?? null).toBeNull()
+  })
 })
