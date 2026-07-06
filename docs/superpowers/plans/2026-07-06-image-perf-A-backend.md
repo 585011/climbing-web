@@ -1021,6 +1021,121 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 
 ---
 
+### Task 7: Harden ImageVariantService against decompression bombs
+
+**Files:**
+- Modify: `src/main/kotlin/com/example/climbingapi/service/ImageVariantService.kt`
+- Test: `src/test/kotlin/com/example/climbingapi/ImageVariantServiceTest.kt`
+
+**Interfaces:**
+- Consumes: nothing new.
+- Produces: `ImageVariantService.exceedsPixelLimit(width: Int, height: Int): Boolean` (used internally + directly testable); `generate` now rejects oversized images and decodes the source only once.
+
+**Why:** `generate` currently decodes the full image to a raster (`width × height × 4` bytes) with no dimension cap — a 20 MB compressed PNG can decode to hundreds of MB — and `resizeToJpeg` re-decodes the bytes once per variant (three decodes total). `backfillImages` runs this inline over many originals. This task caps source pixels and decodes once, reusing the `BufferedImage`.
+
+- [ ] **Step 1: Add the failing tests**
+
+Append to `src/test/kotlin/com/example/climbingapi/ImageVariantServiceTest.kt`:
+
+```kotlin
+    @Test
+    fun `exceedsPixelLimit flags images over the cap and passes normal ones`() {
+        // Uses plain ints — does NOT allocate a giant image.
+        org.junit.jupiter.api.Assertions.assertTrue(service.exceedsPixelLimit(10_000, 6_000))   // 60 MP > cap
+        org.junit.jupiter.api.Assertions.assertFalse(service.exceedsPixelLimit(4_000, 3_000))   // 12 MP < cap
+    }
+```
+
+(The existing `largePngBytes` tests — 2000×1000 = 2 MP — already prove a normal image still produces variants, so no change there.)
+
+- [ ] **Step 2: Run to verify it fails**
+
+Run: `./gradlew test --tests 'com.example.climbingapi.ImageVariantServiceTest'`
+Expected: FAIL — `exceedsPixelLimit` does not exist.
+
+- [ ] **Step 3: Implement the guard + decode-once**
+
+In `src/main/kotlin/com/example/climbingapi/service/ImageVariantService.kt`:
+
+(a) Add the import:
+
+```kotlin
+import java.awt.image.BufferedImage
+```
+
+(b) Replace `generate` so it checks the pixel cap and passes the decoded `source` to `resizeToJpeg`:
+
+```kotlin
+    fun generate(bytes: ByteArray, contentType: String): ImageVariants {
+        val source = try {
+            ImageIO.read(ByteArrayInputStream(bytes))
+        } catch (_: Exception) {
+            null
+        }
+
+        // ImageIO cannot decode WebP (and returns null for any unreadable input).
+        // WebP uploads are already small, so fall back to the original bytes for
+        // both variants rather than pulling in a native decoder.
+        if (source == null) {
+            if (contentType == "image/webp") {
+                return ImageVariants(optimized = bytes, thumbnail = bytes, contentType = contentType)
+            }
+            throw IllegalArgumentException("Could not decode image for processing.")
+        }
+
+        if (exceedsPixelLimit(source.width, source.height)) {
+            throw IllegalArgumentException("Image dimensions too large to process.")
+        }
+
+        return ImageVariants(
+            optimized = resizeToJpeg(source, OPTIMIZED_MAX_WIDTH, OPTIMIZED_QUALITY),
+            thumbnail = resizeToJpeg(source, THUMBNAIL_MAX_WIDTH, THUMBNAIL_QUALITY),
+            contentType = "image/jpeg"
+        )
+    }
+
+    /** True when width × height exceeds the safe decode limit (guards against decompression bombs). */
+    fun exceedsPixelLimit(width: Int, height: Int): Boolean =
+        width.toLong() * height.toLong() > MAX_SOURCE_PIXELS
+```
+
+(c) Replace `resizeToJpeg` to take the already-decoded image (decode once, reuse):
+
+```kotlin
+    private fun resizeToJpeg(source: BufferedImage, maxWidth: Int, quality: Double): ByteArray {
+        val targetWidth = minOf(maxWidth, source.width) // never upscale
+        val out = ByteArrayOutputStream()
+        Thumbnails.of(source)
+            .width(targetWidth) // height is computed to preserve aspect ratio
+            .outputFormat("jpg")
+            .outputQuality(quality)
+            .toOutputStream(out)
+        return out.toByteArray()
+    }
+```
+
+(d) Add the constant to the companion object:
+
+```kotlin
+        const val MAX_SOURCE_PIXELS = 50_000_000L // ~50 MP: generous for phone photos, blocks decode bombs
+```
+
+- [ ] **Step 4: Run to verify it passes**
+
+Run: `./gradlew test --tests 'com.example.climbingapi.ImageVariantServiceTest'`
+Expected: PASS — the new test plus all existing ImageVariantService tests (the decode-once refactor produces identical output, so the width/aspect/no-upscale/webp/throw tests stay green).
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add src/main/kotlin/com/example/climbingapi/service/ImageVariantService.kt src/test/kotlin/com/example/climbingapi/ImageVariantServiceTest.kt
+git commit -m "fix: cap image pixel dimensions and decode once (decompression-bomb guard)
+
+Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
+```
+
+---
+
 ## Post-implementation (manual, at deploy)
 
 After merge + deploy, run once with an admin token:
@@ -1032,7 +1147,7 @@ curl -X POST https://<api-host>/api/walls/backfill-images -H "Authorization: Bea
 
 ## Self-Review
 
-**Spec coverage:** ImageVariantService (Task 1) ✅; schema + model + StorageService.get (Task 2) ✅; repository three-key persistence + backfill query (Task 3) ✅; WallService variant upload + compensation + backfill (Task 4) ✅; WallResponse/WallMapper thumbnailUrl + optimized preference (Task 5) ✅; admin backfill endpoint (Task 6) ✅. Variant dims/quality constants centralized in Task 1 ✅. Keep-original honored (original uploaded + kept; imageKey never overwritten by a variant) ✅.
+**Spec coverage:** ImageVariantService (Task 1) ✅; schema + model + StorageService.get (Task 2) ✅; repository three-key persistence + backfill query (Task 3) ✅; WallService variant upload + compensation + backfill (Task 4) ✅; WallResponse/WallMapper thumbnailUrl + optimized preference (Task 5) ✅; admin backfill endpoint (Task 6) ✅; decompression-bomb guard + decode-once (Task 7) ✅. Variant dims/quality constants centralized in Task 1 ✅. Keep-original honored (original uploaded + kept; imageKey never overwritten by a variant) ✅.
 
 **Placeholder scan:** No TBD/TODO. Test setup that must match existing files (Testcontainers bootstrap in Task 3, admin-JWT helper + 401/403 convention in Task 6) is called out explicitly with the instruction to copy the exact existing pattern rather than invented code — this is deliberate (those helpers live in files the implementer will open), not a placeholder for logic.
 
