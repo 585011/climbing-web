@@ -314,6 +314,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 
 **Files:**
 - Modify: `src/main/kotlin/com/example/climbingapi/repository/WallRepository.kt`
+- Modify: `src/test/kotlin/com/example/climbingapi/integration/WallControllerIT.kt` (complete the `StorageService` fake — see Step 0)
 - Test: `src/test/kotlin/com/example/climbingapi/integration/WallRepositoryIT.kt` (create)
 
 **Interfaces:**
@@ -324,9 +325,21 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
   - the row mapper and every SELECT/INSERT now include `optimized_key`, `thumbnail_key`.
   - `updateImageKey` (single-arg) is **removed** — replaced by `updateImageKeys`.
 
+**Cross-task correction (read first):** Task 2 added `fun get(key: String): ByteArray` to the `StorageService` interface but did **not** update the existing in-memory fake in `WallControllerIT.FakeStorageConfig`, which implements `StorageService` as an anonymous object. As a result the test source tree does **not** compile on a clean build (a stale Gradle `UP-TO-DATE` masked this in Task 2). Step 0 fixes it. Also: verify by **running the test** (which forces a real test compile), not by `compileTestKotlin` alone — that task can report a stale `UP-TO-DATE`.
+
+- [ ] **Step 0: Complete the StorageService fake so the test tree compiles**
+
+In `src/test/kotlin/com/example/climbingapi/integration/WallControllerIT.kt`, inside the anonymous `object : StorageService` in `FakeStorageConfig`, add the missing override (it is never called by `WallControllerIT`, so an empty array is fine):
+
+```kotlin
+            override fun get(key: String): ByteArray = ByteArray(0)
+```
+
 - [ ] **Step 1: Write the failing integration test**
 
-Create `src/test/kotlin/com/example/climbingapi/integration/WallRepositoryIT.kt`. Mirror the Testcontainers bootstrap used by `WallControllerIT` (same `@SpringBootTest` + Postgres container annotations — open `WallControllerIT.kt` and copy its class-level container/registration setup verbatim). The test body:
+`IntegrationTestBase` (which `WallControllerIT` extends) provides the Testcontainers Postgres bootstrap, `mockMvc`, `jdbcTemplate`, `objectMapper`, admin-JWT helpers, `postJson`, `extractId`, and a `@BeforeEach` that TRUNCATEs all tables (`RESTART IDENTITY`). So **there is no seeded area** — the test must create one (walls have a NOT-NULL-ish `area_id` FK). Booting the full context also needs a `StorageService` bean, so import the same fake `WallControllerIT` uses.
+
+Create `src/test/kotlin/com/example/climbingapi/integration/WallRepositoryIT.kt`:
 
 ```kotlin
 package com.example.climbingapi.integration
@@ -336,23 +349,29 @@ import com.example.climbingapi.repository.WallRepository
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.context.annotation.Import
 
-// NOTE: add the SAME class-level @SpringBootTest + @Testcontainers + Postgres
-// @Container + @DynamicPropertySource setup that WallControllerIT uses.
-class WallRepositoryIT {
+@Import(WallControllerIT.FakeStorageConfig::class)
+class WallRepositoryIT : IntegrationTestBase() {
 
     @Autowired lateinit var wallRepository: WallRepository
 
-    // Assumes an area with id 1 exists from seed/migration data, as WallControllerIT relies on.
-    // If WallControllerIT seeds an area differently, follow that same setup here.
+    private var areaId = 0
+
+    @BeforeEach
+    fun createArea() {
+        // resetDatabase() in IntegrationTestBase truncates everything first (runs before this).
+        areaId = extractId(postJson("/api/climbing-areas", """{"name":"Test Area"}"""))
+    }
 
     @Test
     fun `create and read round-trips all three image keys`() {
         val created = wallRepository.create(
             Wall(
-                id = null, areaId = 1, name = "Variant Wall", description = null,
+                id = null, areaId = areaId, name = "Variant Wall", description = null,
                 latitude = null, longitude = null, approachInfo = null,
                 imageKey = "walls/orig.png", createdAt = null,
                 optimizedKey = "walls/opt.jpg", thumbnailKey = "walls/thumb.jpg"
@@ -369,7 +388,7 @@ class WallRepositoryIT {
     fun `updateImageKeys replaces all three keys`() {
         val created = wallRepository.create(
             Wall(
-                id = null, areaId = 1, name = "Update Wall", description = null,
+                id = null, areaId = areaId, name = "Update Wall", description = null,
                 latitude = null, longitude = null, approachInfo = null,
                 imageKey = "walls/old.png", createdAt = null
             )
@@ -385,14 +404,14 @@ class WallRepositoryIT {
     fun `findWallsNeedingBackfill returns walls with an original but missing variants`() {
         val needs = wallRepository.create(
             Wall(
-                id = null, areaId = 1, name = "Needs Backfill", description = null,
+                id = null, areaId = areaId, name = "Needs Backfill", description = null,
                 latitude = null, longitude = null, approachInfo = null,
                 imageKey = "walls/needs.png", createdAt = null
             )
         )
         val done = wallRepository.create(
             Wall(
-                id = null, areaId = 1, name = "Already Done", description = null,
+                id = null, areaId = areaId, name = "Already Done", description = null,
                 latitude = null, longitude = null, approachInfo = null,
                 imageKey = "walls/done.png", createdAt = null,
                 optimizedKey = "walls/done-opt.jpg", thumbnailKey = "walls/done-th.jpg"
@@ -405,10 +424,12 @@ class WallRepositoryIT {
 }
 ```
 
+Note: `FakeStorageConfig` is a nested class of `WallControllerIT`; referencing it as `WallControllerIT.FakeStorageConfig::class` reuses the same fake (now with the Step 0 `get()` override) without duplicating it.
+
 - [ ] **Step 2: Run the test to verify it fails**
 
 Run: `./gradlew test --tests 'com.example.climbingapi.integration.WallRepositoryIT'`
-Expected: FAIL — `updateImageKeys` / `findWallsNeedingBackfill` don't exist, and the row mapper doesn't read the new columns.
+Expected: FAIL — `updateImageKeys` / `findWallsNeedingBackfill` don't exist, and the row mapper doesn't read the new columns. (This run also forces a real test compile, confirming the Step 0 fake fix.)
 
 - [ ] **Step 3: Update the repository**
 
@@ -515,8 +536,11 @@ Expected: PASS (3 tests).
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/main/kotlin/com/example/climbingapi/repository/WallRepository.kt src/test/kotlin/com/example/climbingapi/integration/WallRepositoryIT.kt
+git add src/main/kotlin/com/example/climbingapi/repository/WallRepository.kt src/test/kotlin/com/example/climbingapi/integration/WallRepositoryIT.kt src/test/kotlin/com/example/climbingapi/integration/WallControllerIT.kt
 git commit -m "feat: persist and query wall image variant keys in the repository
+
+Also completes the WallControllerIT StorageService fake with the get()
+override added to the interface in the previous task.
 
 Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ```
