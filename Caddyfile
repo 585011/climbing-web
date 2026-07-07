@@ -14,8 +14,11 @@
 	# by refresh tokens) and the OpenFreeMap tile host
 	# (https://tiles.openfreemap.org); frame-src pinned to Auth0 for the
 	# silent-auth iframe; frame-ancestors 'none' prevents clickjacking.
+	# worker-src blob: + script-src 'wasm-unsafe-eval' are required by
+	# MapLibre GL (it runs its map worker from a blob: URL and compiles
+	# WASM); 'wasm-unsafe-eval' is used instead of the broader 'unsafe-eval'.
 	header {
-		Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' https: data:; connect-src 'self' {$API_ORIGIN:https://climbing-api-production.up.railway.app} https://*.auth0.com https://tiles.openfreemap.org; frame-src https://*.auth0.com; frame-ancestors 'none'; base-uri 'self'; object-src 'none'"
+		Content-Security-Policy "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' https: data:; connect-src 'self' {$API_ORIGIN:https://climbing-api-production.up.railway.app} https://*.auth0.com https://tiles.openfreemap.org; frame-src https://*.auth0.com; frame-ancestors 'none'; base-uri 'self'; object-src 'none'"
 		X-Content-Type-Options "nosniff"
 		X-Frame-Options "DENY"
 		Referrer-Policy "strict-origin-when-cross-origin"
