@@ -1,7 +1,14 @@
 import { useEffect, useRef, useState } from 'react'
-import maplibregl from 'maplibre-gl'
+// CSP build: loads the map worker from a real same-origin URL instead of a
+// runtime blob:, so it runs under a strict CSP (script-src 'self') without
+// needing 'unsafe-eval'/'wasm-unsafe-eval'. The default build's blob worker is
+// blocked as an eval by Firefox/Safari, leaving the map blank. See Caddyfile.
+import maplibregl from 'maplibre-gl/dist/maplibre-gl-csp'
+import maplibreWorkerUrl from 'maplibre-gl/dist/maplibre-gl-csp-worker.js?url'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import type { ClimbingArea } from '../../../types/api'
+
+maplibregl.setWorkerUrl(maplibreWorkerUrl)
 import { AreaCard } from './AreaCard'
 import { LocateButton } from './LocateButton'
 
