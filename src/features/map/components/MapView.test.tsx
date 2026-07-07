@@ -37,10 +37,17 @@ const { mapInstance, MapCtor, MarkerCtor, LngLatBoundsCtor } = vi.hoisted(() => 
   return { mapInstance, markerInstance, boundsInstance, MapCtor, MarkerCtor, LngLatBoundsCtor }
 })
 
-vi.mock('maplibre-gl', () => ({
-  default: { Map: MapCtor, Marker: MarkerCtor, LngLatBounds: LngLatBoundsCtor },
+vi.mock('maplibre-gl/dist/maplibre-gl-csp', () => ({
+  default: {
+    Map: MapCtor,
+    Marker: MarkerCtor,
+    LngLatBounds: LngLatBoundsCtor,
+    setWorkerUrl: vi.fn(),
+  },
 }))
-// CSS import is a no-op under vitest, but stub it so resolution never fails.
+// The ?url worker import and the CSS import are no-ops under vitest; stub them
+// so module resolution never fails.
+vi.mock('maplibre-gl/dist/maplibre-gl-csp-worker.js?url', () => ({ default: 'worker.js' }))
 vi.mock('maplibre-gl/dist/maplibre-gl.css', () => ({}))
 
 // AreaCard/LocateButton render plain nodes here; they have their own tests.
