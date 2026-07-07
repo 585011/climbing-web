@@ -101,20 +101,16 @@ const MapView = ({ areas, selectedId, onSelect }: MapViewProps) => {
     }
   }, [selectedId])
 
-  // Keep the canvas sized when entering/leaving fullscreen.
+  // Fullscreen is a CSS overlay (fixed inset-0), not the Fullscreen API: iOS
+  // Safari doesn't support requestFullscreen on non-video elements, so the
+  // native approach left the button dead on iPhone. Resize the canvas after the
+  // layout flips so MapLibre repaints at the new size.
   useEffect(() => {
-    const onFsChange = () => {
-      setFullscreen(Boolean(document.fullscreenElement))
-      mapRef.current?.resize()
-    }
-    document.addEventListener('fullscreenchange', onFsChange)
-    return () => document.removeEventListener('fullscreenchange', onFsChange)
-  }, [])
+    const id = requestAnimationFrame(() => mapRef.current?.resize())
+    return () => cancelAnimationFrame(id)
+  }, [fullscreen])
 
-  const toggleFullscreen = () => {
-    if (document.fullscreenElement) document.exitFullscreen()
-    else containerRef.current?.requestFullscreen?.()
-  }
+  const toggleFullscreen = () => setFullscreen(v => !v)
 
   const flyToUser = (coords: { latitude: number; longitude: number }) => {
     const map = mapRef.current
@@ -132,7 +128,13 @@ const MapView = ({ areas, selectedId, onSelect }: MapViewProps) => {
   const selectedArea = areas.find(a => a.id === selectedId) ?? null
 
   return (
-    <div className="relative h-[60vh] w-full overflow-hidden rounded-xl border border-ink/15">
+    <div
+      className={
+        fullscreen
+          ? 'fixed inset-0 z-[1000] overflow-hidden bg-paper'
+          : 'relative h-[60vh] w-full overflow-hidden rounded-xl border border-ink/15'
+      }
+    >
       <div ref={containerRef} className="absolute inset-0" />
       <button
         onClick={toggleFullscreen}
