@@ -135,7 +135,11 @@ const MapView = ({ areas, selectedId, onSelect }: MapViewProps) => {
           : 'relative h-[60vh] w-full overflow-hidden rounded-xl border border-ink/15'
       }
     >
-      <div ref={containerRef} className="absolute inset-0" />
+      {/* h-full/w-full, NOT absolute inset-0: MapLibre's stylesheet sets
+          .maplibregl-map { position: relative } at equal specificity, and it
+          lands after Tailwind utilities in the bundle — overriding `absolute`
+          and collapsing the container to 0 height (blank map, clipped pins). */}
+      <div ref={containerRef} className="h-full w-full" />
       <button
         onClick={toggleFullscreen}
         aria-label={fullscreen ? 'Exit fullscreen' : 'Expand map'}
