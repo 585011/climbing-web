@@ -40,6 +40,26 @@ describe('AreaCard', () => {
     expect(link).toHaveAttribute('data-area', '3')
   })
 
+  it('shows the route count when present, pluralised', () => {
+    render(<AreaCard area={{ ...area, routeCount: 12 }} onClose={vi.fn()} />)
+    expect(screen.getByText('12 routes')).toBeInTheDocument()
+  })
+
+  it('shows singular route count', () => {
+    render(<AreaCard area={{ ...area, routeCount: 1 }} onClose={vi.fn()} />)
+    expect(screen.getByText('1 route')).toBeInTheDocument()
+  })
+
+  it('shows a zero route count', () => {
+    render(<AreaCard area={{ ...area, routeCount: 0 }} onClose={vi.fn()} />)
+    expect(screen.getByText('0 routes')).toBeInTheDocument()
+  })
+
+  it('omits the route count when the API does not provide it', () => {
+    render(<AreaCard area={area} onClose={vi.fn()} />)
+    expect(screen.queryByText(/routes?$/)).not.toBeInTheDocument()
+  })
+
   it('fires onClose when the close button is tapped', () => {
     const onClose = vi.fn()
     render(<AreaCard area={area} onClose={onClose} />)

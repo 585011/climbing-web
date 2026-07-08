@@ -91,12 +91,15 @@ const MapView = ({ areas, selectedId, onSelect }: MapViewProps) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Reflect selection in the pin styling.
+  // Reflect selection in the pin styling. Scale via the standalone CSS `scale`
+  // property, never style.transform: MapLibre positions each marker by writing
+  // translate() into that element's transform, so overwriting it snaps every
+  // pin to the map's top-left corner until the next repaint.
   useEffect(() => {
     for (const [id, marker] of markersRef.current) {
       const el = marker.getElement()
       const selected = id === selectedId
-      el.style.transform = selected ? 'scale(1.5)' : ''
+      el.style.scale = selected ? '1.5' : ''
       el.style.zIndex = selected ? '1' : ''
     }
   }, [selectedId])

@@ -7,6 +7,11 @@ export const AreaCard = ({ area, onClose }: { area: ClimbingArea; onClose: () =>
       <div className="min-w-0">
         <p className="text-[11px] uppercase tracking-wide text-ink-3">Selected</p>
         <h2 className="text-lg font-bold text-ink truncate">{area.name}</h2>
+        {area.routeCount !== undefined && (
+          <p className="text-sm text-ink-2">
+            {area.routeCount} {area.routeCount === 1 ? 'route' : 'routes'}
+          </p>
+        )}
       </div>
       <button
         onClick={onClose}
