@@ -8,6 +8,8 @@ export const ClimbingAreaSchema = z.object({
   longitude: z.number(),
   region: z.string().nullable().transform(v => v ?? ''),
   createdAt: z.string(),
+  /** Total routes across all of the area's walls; absent until the API deploy that adds it. */
+  routeCount: z.number().optional(),
 })
 
 export type ClimbingArea = z.infer<typeof ClimbingAreaSchema>
