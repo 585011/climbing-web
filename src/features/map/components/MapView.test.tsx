@@ -13,28 +13,27 @@ const { mapInstance, MapCtor, MarkerCtor, LngLatBoundsCtor } = vi.hoisted(() => 
     flyTo: vi.fn(),
     resize: vi.fn(),
   }
-  const markerInstance = {
-    setLngLat: vi.fn().mockReturnThis(),
-    addTo: vi.fn().mockReturnThis(),
-    remove: vi.fn(),
-    getElement: vi.fn(() => document.createElement('div')),
-  }
   const boundsInstance = { extend: vi.fn().mockReturnThis(), isEmpty: vi.fn(() => false) }
 
   // function (not arrow) expressions so these are usable as `new` constructors.
   const MapCtor: Mock<(options: { style: string }) => typeof mapInstance> = vi.fn(function () {
     return mapInstance
   })
-  const MarkerCtor: Mock<(options?: { element: HTMLElement }) => typeof markerInstance> = vi.fn(
-    function () {
-      return markerInstance
-    },
-  )
+  // getElement returns the element the component handed in, like real MapLibre.
+  const MarkerCtor = vi.fn(function (options?: { element?: HTMLElement }) {
+    const el = options?.element ?? document.createElement('div')
+    return {
+      setLngLat: vi.fn().mockReturnThis(),
+      addTo: vi.fn().mockReturnThis(),
+      remove: vi.fn(),
+      getElement: () => el,
+    }
+  })
   const LngLatBoundsCtor = vi.fn(function () {
     return boundsInstance
   })
 
-  return { mapInstance, markerInstance, boundsInstance, MapCtor, MarkerCtor, LngLatBoundsCtor }
+  return { mapInstance, boundsInstance, MapCtor, MarkerCtor, LngLatBoundsCtor }
 })
 
 vi.mock('maplibre-gl/dist/maplibre-gl-csp', () => ({
@@ -98,6 +97,23 @@ describe('MapView', () => {
   it('adds one marker per area', () => {
     render(<MapView areas={[area(1), area(2), area(3)]} selectedId={null} onSelect={vi.fn()} />)
     expect(MarkerCtor).toHaveBeenCalledTimes(3)
+  })
+
+  it('selection styling never clobbers the transform MapLibre positions pins with', () => {
+    const areas = [area(1), area(2)]
+    const { rerender } = render(<MapView areas={areas} selectedId={null} onSelect={vi.fn()} />)
+
+    const els = MarkerCtor.mock.calls.map(c => (c[0] as { element: HTMLElement }).element)
+    // Real MapLibre writes translate() into style.transform to place each pin.
+    for (const el of els) el.style.transform = 'translate(10px, 20px)'
+
+    rerender(<MapView areas={areas} selectedId={1} onSelect={vi.fn()} />)
+    for (const el of els) expect(el.style.transform).toBe('translate(10px, 20px)')
+    expect(els[0].style.zIndex).toBe('1')
+
+    rerender(<MapView areas={areas} selectedId={null} onSelect={vi.fn()} />)
+    for (const el of els) expect(el.style.transform).toBe('translate(10px, 20px)')
+    expect(els[0].style.zIndex).toBe('')
   })
 
   it('removes the map on unmount', () => {
