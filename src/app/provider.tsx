@@ -22,16 +22,43 @@ async function syncBackendUser(displayName: string, email: string) {
   }
 }
 
+// Auth0 rejects with these when the cached session can no longer be renewed —
+// a rotated-away, revoked or expired refresh token. Nothing client-side can
+// recover it, so every later request would fail until localStorage is cleared
+// by hand. Send the user back through login instead.
+const UNRECOVERABLE_SESSION_ERRORS = ['invalid_grant', 'missing_refresh_token', 'login_required']
+
+const isUnrecoverableSession = (e: unknown): boolean =>
+  typeof e === 'object' &&
+  e !== null &&
+  'error' in e &&
+  typeof (e as { error: unknown }).error === 'string' &&
+  UNRECOVERABLE_SESSION_ERRORS.includes((e as { error: string }).error)
+
 const AuthSync = ({ children }: { children: ReactNode }) => {
-  const { getAccessTokenSilently, isAuthenticated, user } = useAuth0()
+  const { getAccessTokenSilently, loginWithRedirect, isAuthenticated, user } = useAuth0()
 
   useEffect(() => {
-    configureAuth(() =>
-      getAccessTokenSilently({
-        authorizationParams: { audience: import.meta.env.VITE_AUTH0_AUDIENCE },
-      })
-    )
-  }, [getAccessTokenSilently])
+    // Concurrent requests fail together; only the first should kick off a redirect.
+    let reauthenticating = false
+
+    configureAuth(async () => {
+      try {
+        return await getAccessTokenSilently({
+          authorizationParams: { audience: import.meta.env.VITE_AUTH0_AUDIENCE },
+        })
+      } catch (e) {
+        if (isUnrecoverableSession(e) && !reauthenticating) {
+          reauthenticating = true
+          loginWithRedirect().catch((redirectErr) => {
+            reauthenticating = false
+            console.error('[Auth] Re-authentication failed:', redirectErr)
+          })
+        }
+        throw e
+      }
+    })
+  }, [getAccessTokenSilently, loginWithRedirect])
 
   useEffect(() => {
     if (isAuthenticated && user?.email) {
@@ -48,6 +75,8 @@ export const AppProvider = ({ children }: AppProviderProps) => (
     clientId={import.meta.env.VITE_AUTH0_CLIENT_ID}
     cacheLocation="localstorage"
     useRefreshTokens={true}
+    // v2 defaults this to false, leaving a failed refresh grant with no recovery path.
+    useRefreshTokensFallback={true}
     authorizationParams={{
       redirect_uri: window.location.origin,
       audience: import.meta.env.VITE_AUTH0_AUDIENCE,
