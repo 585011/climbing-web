@@ -25,4 +25,11 @@ export default defineConfig([
       globals: globals.browser,
     },
   },
+  {
+    // Route files export `Route` and keep their page component local, as TanStack
+    // Router expects. The router plugin's autoCodeSplitting (vite.config.ts) moves
+    // those components into separate modules, so Fast Refresh already works here.
+    files: ['src/app/routes/**/*.tsx'],
+    rules: { 'react-refresh/only-export-components': 'off' },
+  },
 ])
