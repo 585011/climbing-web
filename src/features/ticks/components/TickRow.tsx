@@ -1,4 +1,6 @@
 import { Link } from '@tanstack/react-router'
+import { HoldColorChip } from '../../../components/ui/HoldColorChip'
+import { routeDisplayName } from '../../../utils/routeDisplayName'
 import type { EnrichedTick } from '../utils/enrichTicks'
 
 const STYLE_INITIALS: Record<string, string> = {
@@ -28,15 +30,21 @@ const RowBody = ({ item, showStars }: { item: EnrichedTick; showStars?: boolean 
       <span className="flex-1 min-w-0">
         <span className="flex items-center gap-2">
           <span className="text-[14px] font-semibold text-ink truncate">
-            {route?.name ?? 'Unknown route'}
+            {route ? routeDisplayName(route) : 'Unknown route'}
           </span>
+          {route?.holdColor && <HoldColorChip color={route.holdColor} />}
           {initials && (
             <span className="shrink-0 text-[9px] font-bold text-accent border border-accent rounded-full px-1.5 py-0.5">
               {initials}
             </span>
           )}
         </span>
-        {location && <span className="block text-[12px] text-ink-3 truncate">{location}</span>}
+        {(location || route?.retiredAt) && (
+          <span className="block text-[12px] text-ink-3 truncate">
+            {location}
+            {route?.retiredAt && <>{location && ' · '}retired</>}
+          </span>
+        )}
       </span>
       <span className="shrink-0 flex flex-col items-end gap-1">
         {showStars && tick.rating > 0 && (

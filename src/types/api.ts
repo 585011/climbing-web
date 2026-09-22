@@ -10,6 +10,8 @@ export const ClimbingAreaSchema = z.object({
   createdAt: z.string(),
   /** Total routes across all of the area's walls; absent until the API deploy that adds it. */
   routeCount: z.number().optional(),
+  /** Outdoor crag or indoor gym; absent until the API deploy that adds it. */
+  type: z.enum(['crag', 'gym']).optional().transform(v => v ?? 'crag'),
 })
 
 export type ClimbingArea = z.infer<typeof ClimbingAreaSchema>
@@ -34,7 +36,8 @@ export type Wall = z.infer<typeof WallSchema>
 export const ClimbingRouteSchema = z.object({
   id: z.number(),
   wallId: z.number(),
-  name: z.string(),
+  // Gym routes are often unnamed.
+  name: z.string().nullable().transform(v => v ?? ''),
   grade: z.string().nullable().transform(v => v ?? ''),
   length: z.number().nullable().transform(v => v ?? 0),
   style: z.string().nullable().transform(v => v ?? ''),
@@ -43,6 +46,10 @@ export const ClimbingRouteSchema = z.object({
   firstAscendant: z.string().nullable().transform(v => v ?? ''),
   description: z.string().nullable().transform(v => v ?? ''),
   createdAt: z.string(),
+  /** Gym routes are identified by hold colour; empty for crag routes. */
+  holdColor: z.string().nullish().transform(v => v ?? ''),
+  /** Set when a gym route has been rotated out; retired routes keep their ticks. */
+  retiredAt: z.string().nullish().transform(v => v ?? null),
 })
 
 export type ClimbingRoute = z.infer<typeof ClimbingRouteSchema>
@@ -79,6 +86,29 @@ export const TickInputSchema = z.object({
 })
 
 export type TickInput = z.infer<typeof TickInputSchema>
+
+/** Route disciplines accepted by the backend's `routes.style` enum. */
+export const ROUTE_STYLES = ['boulder', 'sport', 'toprope', 'speed', 'trad'] as const
+
+/**
+ * Validates a gym route a user creates while ticking (`newRoute` on the tick
+ * request). Mirrors the backend's NewGymRouteRequest; the backend is authoritative.
+ */
+export const NewGymRouteInputSchema = z.object({
+  wallId: z.number().int().min(1),
+  grade: z.string().trim().min(1).max(20).regex(/^[a-zA-Z0-9+\-/. ]*$/, 'grade contains invalid characters.'),
+  style: z.enum(ROUTE_STYLES),
+  holdColor: z
+    .string()
+    .trim()
+    .max(30)
+    .regex(/^[\p{L}\s-]*$/u, 'holdColor may only contain letters, spaces and hyphens.')
+    .optional()
+    .transform(v => v || undefined),
+  name: z.string().trim().max(200).optional().transform(v => v || undefined),
+})
+
+export type NewGymRouteInput = z.input<typeof NewGymRouteInputSchema>
 
 /**
  * Wall image upload limits. Single source of truth — referenced by the file

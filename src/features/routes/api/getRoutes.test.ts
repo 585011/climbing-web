@@ -15,4 +15,10 @@ describe('getRoutes', () => {
     await getRoutes()
     expect(get).toHaveBeenCalledWith('/routes?size=100')
   })
+
+  it('asks for retired routes when requested (tick history)', async () => {
+    get.mockResolvedValue({ data: [] })
+    await getRoutes({ includeRetired: true })
+    expect(get).toHaveBeenCalledWith('/routes?size=100&includeRetired=true')
+  })
 })

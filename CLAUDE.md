@@ -85,6 +85,11 @@ Detail pages (not tabs):
 | Wall | `/areas/:areaId/walls/:wallId` | Implemented — hero, route list |
 | Route | `/areas/:areaId/walls/:wallId/routes/:routeId` | Shell — breadcrumb, grade, meta, topo placeholder, description, tick section |
 | Log a tick | `/areas/:areaId/walls/:wallId/routes/:routeId/tick` | Implemented — style picker, star rating, personal note; handles create + edit |
+| Add & tick gym route | `/areas/:areaId/walls/:wallId/new-tick` | Implemented — gym walls only; grade, type, hold colour, optional name + tick fields; warns about look-alike routes on the wall; one request (`newRoute` on the tick) |
+
+## Climbing gyms
+
+Areas have `type: 'crag' | 'gym'` (gym badge, square map pin, Crag/Gym filters on Explore, Map and All ticks). In gyms, climbers add routes themselves while ticking and any climber can mark a route **retired** when it's taken down (restoring is admin-only). Retired routes drop out of wall/area route lists but ticks keep them — tick history fetches `/routes?includeRetired=true` so they still resolve. Unnamed gym routes display as "<Colour> route" via `utils/routeDisplayName.ts`.
 
 ## Design system
 

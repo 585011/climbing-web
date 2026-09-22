@@ -1,4 +1,5 @@
-import { createFileRoute, Outlet, useChildMatches, useNavigate } from '@tanstack/react-router'
+import { createFileRoute, Link, Outlet, useChildMatches, useNavigate } from '@tanstack/react-router'
+import { useArea } from '../../features/areas/hooks/useArea'
 import { useWall } from '../../features/walls/hooks/useWall'
 import { useRoutesByWall } from '../../features/routes/hooks/useRoutesByWall'
 import { RoutesList } from '../../features/routes/components/RoutesList'
@@ -14,6 +15,7 @@ function WallPage() {
   const wallIdNum = Number(wallId)
   const { data: wall, isLoading: wallLoading, isError: wallError } = useWall(wallIdNum)
   const { data: routes, isLoading: routesLoading } = useRoutesByWall(wallIdNum)
+  const { data: area } = useArea(Number(areaId))
   const navigate = useNavigate()
 
   if (childMatches.length > 0) return <Outlet />
@@ -44,6 +46,19 @@ function WallPage() {
           </>
         )}
       </div>
+
+      {/* Gym routes rotate too often for admins to keep up — climbers add them while ticking. */}
+      {area?.type === 'gym' && (
+        <div className="px-4 pb-2">
+          <Link
+            to="/areas/$areaId/walls/$wallId/new-tick"
+            params={{ areaId, wallId }}
+            className="block w-full py-3 rounded-xl bg-accent text-paper text-center text-[14px] font-semibold"
+          >
+            + Route not listed? Add &amp; tick it
+          </Link>
+        </div>
+      )}
 
       <div className="flex-1">
         {routesLoading ? (

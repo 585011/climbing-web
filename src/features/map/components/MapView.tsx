@@ -20,12 +20,14 @@ interface MapViewProps {
   onSelect: (id: number | null) => void
 }
 
-// Small accent pin element for an area marker.
-const pinElement = (): HTMLElement => {
+// Small pin element for an area marker: accent circle for crags, dark square for gyms.
+const pinElement = (type: ClimbingArea['type']): HTMLElement => {
   const el = document.createElement('div')
-  el.className = 'map-pin'
+  el.className = type === 'gym' ? 'map-pin map-pin-gym' : 'map-pin'
   el.style.cssText =
-    'width:16px;height:16px;border-radius:9999px;background:var(--color-accent);border:2px solid var(--color-paper);box-shadow:0 1px 3px rgba(0,0,0,.4);cursor:pointer'
+    type === 'gym'
+      ? 'width:16px;height:16px;border-radius:4px;background:var(--color-ink);border:2px solid var(--color-paper);box-shadow:0 1px 3px rgba(0,0,0,.4);cursor:pointer'
+      : 'width:16px;height:16px;border-radius:9999px;background:var(--color-accent);border:2px solid var(--color-paper);box-shadow:0 1px 3px rgba(0,0,0,.4);cursor:pointer'
   return el
 }
 
@@ -69,7 +71,7 @@ const MapView = ({ areas, selectedId, onSelect }: MapViewProps) => {
 
     const bounds = new maplibregl.LngLatBounds()
     for (const area of areas) {
-      const el = pinElement()
+      const el = pinElement(area.type)
       el.addEventListener('click', e => {
         e.stopPropagation() // don't also trigger the background deselect
         onSelectRef.current(area.id)

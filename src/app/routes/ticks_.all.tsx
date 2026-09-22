@@ -16,7 +16,8 @@ function AllTicksPage() {
   const userQ = useCurrentUser()
   const userId = userQ.data?.id ?? 0
   const ticksQ = useTicksByUser(userId, { enabled: userId > 0 })
-  const routesQ = useRoutes()
+  // Include retired routes so ticks on rotated-out gym routes still resolve.
+  const routesQ = useRoutes({ includeRetired: true })
   const wallsQ = useWalls()
   const areasQ = useAreas()
 
