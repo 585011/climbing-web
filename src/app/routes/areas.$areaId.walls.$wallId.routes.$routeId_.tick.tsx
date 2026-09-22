@@ -7,18 +7,13 @@ import { useCurrentUser } from '../../features/users/hooks/useCurrentUser'
 import { useTicksByUser } from '../../features/ticks/hooks/useTicksByUser'
 import { useCreateTick } from '../../features/ticks/hooks/useCreateTick'
 import { useUpdateTick } from '../../features/ticks/hooks/useUpdateTick'
+import { TICK_STYLES as STYLES } from '../../features/ticks/utils/tickStyles'
 import { PERSONAL_NOTE_MAX } from '../../types/api'
+import { routeDisplayName } from '../../utils/routeDisplayName'
 
 export const Route = createFileRoute('/areas/$areaId/walls/$wallId/routes/$routeId_/tick')({
   component: LogTickPage,
 })
-
-const STYLES: { value: string; label: string; description: string }[] = [
-  { value: 'onsight', label: 'Onsight', description: 'first try, no beta' },
-  { value: 'flash', label: 'Flash', description: 'first try, had beta' },
-  { value: 'redpoint', label: 'Redpoint', description: 'sent after working it' },
-  { value: 'free solo', label: 'Free solo', description: 'no rope' },
-]
 
 function LogTickPage() {
   const { areaId, wallId, routeId } = Route.useParams()
@@ -121,7 +116,7 @@ function LogTickPage() {
         ) : (
           <>
             <div className="flex items-start justify-between gap-3">
-              <h1 className="text-2xl font-bold text-ink leading-tight">{route?.name}</h1>
+              <h1 className="text-2xl font-bold text-ink leading-tight">{route && routeDisplayName(route)}</h1>
               {route?.grade && (
                 <div className="shrink-0 rounded-lg bg-paper-2 border border-ink/15 px-2.5 py-1 mt-0.5">
                   <span className="text-[13px] font-bold text-ink">{route.grade}</span>

@@ -21,13 +21,24 @@ const STYLE_CHIPS: { value: string; label: string }[] = [
 ]
 
 type SortBy = 'date' | 'grade'
+type AreaTypeFilter = '' | 'crag' | 'gym'
+
+const AREA_TYPE_CHIPS: { value: AreaTypeFilter; label: string }[] = [
+  { value: '', label: 'All' },
+  { value: 'crag', label: 'Crags' },
+  { value: 'gym', label: 'Gyms' },
+]
 
 export const TicksAllList = ({ ticks, isLoading, isError, onRetry }: TicksAllListProps) => {
   const [styleFilter, setStyleFilter] = useState('') // '' = All
   const [sortBy, setSortBy] = useState<SortBy>('date')
+  const [areaType, setAreaType] = useState<AreaTypeFilter>('')
 
-  const chips = STYLE_CHIPS.filter(c => ticks.some(t => t.tick.style === c.value))
-  const filtered = styleFilter ? ticks.filter(t => t.tick.style === styleFilter) : ticks
+  // Only offer the crag/gym split when the user has ticks in both.
+  const hasBothTypes = ticks.some(t => t.area?.type === 'gym') && ticks.some(t => t.area?.type === 'crag')
+  const byType = areaType ? ticks.filter(t => t.area?.type === areaType) : ticks
+  const chips = STYLE_CHIPS.filter(c => byType.some(t => t.tick.style === c.value))
+  const filtered = styleFilter ? byType.filter(t => t.tick.style === styleFilter) : byType
   const sorted =
     sortBy === 'grade'
       ? [...filtered].sort((a, b) =>
@@ -62,6 +73,22 @@ export const TicksAllList = ({ ticks, isLoading, isError, onRetry }: TicksAllLis
         <TicksEmptyState />
       ) : (
         <>
+          {hasBothTypes && (
+            <div className="flex gap-2">
+              {AREA_TYPE_CHIPS.map(c => (
+                <button
+                  key={c.value}
+                  onClick={() => setAreaType(c.value)}
+                  className={`shrink-0 text-[11px] rounded-full border px-3 py-1 ${
+                    areaType === c.value ? 'bg-ink text-paper border-ink' : 'border-ink/25 text-ink-2 bg-paper'
+                  }`}
+                >
+                  {c.label}
+                </button>
+              ))}
+            </div>
+          )}
+
           {/* style chips + sort */}
           <div className="flex items-center justify-between gap-2">
             <div className="flex gap-2 overflow-x-auto no-scrollbar">

@@ -7,6 +7,7 @@ import { WallCard } from '../../features/walls/components/WallCard'
 import { WallPhoto } from '../../features/walls/components/WallPhoto'
 import { AreaRoutesList } from '../../features/routes/components/AreaRoutesList'
 import { TabBar } from '../../components/ui/TabBar'
+import { GymBadge } from '../../components/ui/GymBadge'
 
 export const Route = createFileRoute('/areas/$areaId')({
   component: AreaPage,
@@ -58,7 +59,10 @@ function AreaPage() {
         ) : (
           <>
             <div className="flex items-baseline justify-between gap-2">
-              <h1 className="text-2xl font-bold text-ink leading-tight">{area?.name}</h1>
+              <h1 className="flex items-center gap-2 text-2xl font-bold text-ink leading-tight min-w-0">
+                {area?.name}
+                {area?.type === 'gym' && <GymBadge />}
+              </h1>
               <span className="text-[13px] text-ink-2 shrink-0">
                 {walls?.length ?? 0} walls
               </span>

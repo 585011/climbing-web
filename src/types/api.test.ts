@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { PERSONAL_NOTE_MAX, TickInputSchema, WallSchema, WALL_IMAGE_MAX_BYTES, WALL_IMAGE_TYPES } from './api'
+import { ClimbingAreaSchema, ClimbingRouteSchema, NewGymRouteInputSchema, PERSONAL_NOTE_MAX, TickInputSchema, WallSchema, WALL_IMAGE_MAX_BYTES, WALL_IMAGE_TYPES } from './api'
 
 describe('TickInputSchema', () => {
   it('accepts a note exactly at the max length', () => {
@@ -64,5 +64,44 @@ describe('wall image constants', () => {
   it('caps size at 20 MB and allows exactly three MIME types', () => {
     expect(WALL_IMAGE_MAX_BYTES).toBe(20 * 1024 * 1024)
     expect(WALL_IMAGE_TYPES).toEqual(['image/jpeg', 'image/png', 'image/webp'])
+  })
+})
+
+describe('gym fields', () => {
+  const baseArea = { id: 1, name: 'A', description: null, latitude: 1, longitude: 1, region: null, createdAt: 'x' }
+  const baseRoute = {
+    id: 1, wallId: 2, name: null, grade: '6B', length: null, style: 'boulder', bolts: null,
+    ropeLengths: null, firstAscendant: null, description: null, createdAt: 'x',
+  }
+
+  it('defaults area type to crag for pre-gym API responses', () => {
+    expect(ClimbingAreaSchema.parse(baseArea).type).toBe('crag')
+    expect(ClimbingAreaSchema.parse({ ...baseArea, type: 'gym' }).type).toBe('gym')
+  })
+
+  it('accepts unnamed gym routes and normalises holdColor/retiredAt', () => {
+    const parsed = ClimbingRouteSchema.parse(baseRoute)
+    expect(parsed.name).toBe('')
+    expect(parsed.holdColor).toBe('')
+    expect(parsed.retiredAt).toBeNull()
+    const gym = ClimbingRouteSchema.parse({ ...baseRoute, holdColor: 'yellow', retiredAt: '2026-09-01T00:00:00Z' })
+    expect(gym.holdColor).toBe('yellow')
+    expect(gym.retiredAt).toBe('2026-09-01T00:00:00Z')
+  })
+})
+
+describe('NewGymRouteInputSchema', () => {
+  it('trims and drops empty optional fields', () => {
+    const parsed = NewGymRouteInputSchema.parse({ wallId: 5, grade: ' 6B ', style: 'boulder', holdColor: ' ', name: '' })
+    expect(parsed).toEqual({ wallId: 5, grade: '6B', style: 'boulder' })
+  })
+
+  it('requires grade and a known style', () => {
+    expect(NewGymRouteInputSchema.safeParse({ wallId: 5, grade: '', style: 'boulder' }).success).toBe(false)
+    expect(NewGymRouteInputSchema.safeParse({ wallId: 5, grade: '6B', style: 'alpine' }).success).toBe(false)
+  })
+
+  it('accepts Norwegian letters in hold colours', () => {
+    expect(NewGymRouteInputSchema.safeParse({ wallId: 5, grade: '6B', style: 'boulder', holdColor: 'grønn' }).success).toBe(true)
   })
 })

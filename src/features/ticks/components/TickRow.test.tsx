@@ -18,7 +18,7 @@ const tick = (over: Partial<UserRouteTick> = {}): UserRouteTick => ({
 })
 const route: ClimbingRoute = {
   id: 10, wallId: 20, name: 'Nordavind', grade: '6+', length: 20, style: 'sport',
-  bolts: 8, ropeLengths: 1, firstAscendant: '', description: '', createdAt: '2026-01-01T00:00:00Z',
+  bolts: 8, ropeLengths: 1, firstAscendant: '', description: '', createdAt: '2026-01-01T00:00:00Z', holdColor: '', retiredAt: null,
 }
 const wall: Wall = {
   id: 20, areaId: 30, name: 'Tellevikhola', description: '', latitude: null,
@@ -56,5 +56,14 @@ describe('TickRow', () => {
 
     rerender(<TickRow item={{ tick: tick({ rating: 0 }), route, wall }} showStars />)
     expect(container.textContent).not.toContain('★')
+  })
+
+  it('names unnamed gym routes by hold colour and flags retired routes', () => {
+    const gymRoute = { ...route, name: '', holdColor: 'yellow', retiredAt: '2026-09-01T00:00:00Z' }
+    const { container } = render(<TickRow item={{ tick: tick(), route: gymRoute, wall }} />)
+
+    expect(screen.getByText('Yellow route')).toBeInTheDocument()
+    expect(screen.getByText('yellow')).toBeInTheDocument()
+    expect(container.textContent).toContain('Tellevikhola · retired')
   })
 })

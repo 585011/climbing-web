@@ -24,7 +24,7 @@ import { TicksAllList } from './TicksAllList'
 
 const route = (id: number, grade: string, name: string): ClimbingRoute => ({
   id, wallId: 20, name, grade, length: 20, style: 'sport', bolts: 8,
-  ropeLengths: 1, firstAscendant: '', description: '', createdAt: '2026-01-01T00:00:00Z',
+  ropeLengths: 1, firstAscendant: '', description: '', createdAt: '2026-01-01T00:00:00Z', holdColor: '', retiredAt: null,
 })
 const item = (
   id: number, grade: string, name: string, style: string, tickedAt: string, rating = 3,
@@ -100,5 +100,23 @@ describe('TicksAllList', () => {
 
     expect(screen.getByText(/No ticks yet/)).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'All' })).not.toBeInTheDocument()
+  })
+
+  it('offers a crag/gym split only when ticks span both, and filters by it', () => {
+    const typed: EnrichedTick[] = [
+      { ...items[0], area: { type: 'crag' } as EnrichedTick['area'] },
+      { ...items[1], area: { type: 'gym' } as EnrichedTick['area'] },
+    ]
+    render(<TicksAllList ticks={typed} isLoading={false} isError={false} onRetry={noop} />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Gyms' }))
+    expect(screen.getByText(/All ticks · 1/)).toBeInTheDocument()
+    expect(screen.getByText('Solveggen')).toBeInTheDocument()
+    expect(screen.queryByText('Nordavind')).not.toBeInTheDocument()
+  })
+
+  it('hides the crag/gym split when all ticks are from one type', () => {
+    render(<TicksAllList ticks={items} isLoading={false} isError={false} onRetry={noop} />)
+    expect(screen.queryByRole('button', { name: 'Gyms' })).not.toBeInTheDocument()
   })
 })
