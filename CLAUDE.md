@@ -81,15 +81,17 @@ Detail pages (not tabs):
 
 | Page | Route | State |
 |---|---|---|
-| Area (Crag) | `/areas/:areaId` | Implemented — hero, info, tabs (Routes/Walls/Approach/Info); Walls tab hidden when ≤ 1 wall; Approach tab shows per-wall `approachInfo` |
+| Area (Crag) | `/areas/:areaId` | Implemented — hero, info, tabs (Walls/Routes/Approach/Info); Walls is the default tab but is hidden when ≤ 1 wall (falls back to Routes); Approach tab shows per-wall `approachInfo` |
 | Wall | `/areas/:areaId/walls/:wallId` | Implemented — hero, route list |
 | Route | `/areas/:areaId/walls/:wallId/routes/:routeId` | Shell — breadcrumb, grade, meta, topo placeholder, description, tick section |
-| Log a tick | `/areas/:areaId/walls/:wallId/routes/:routeId/tick` | Implemented — style picker, star rating, personal note; handles create + edit |
+| Log a tick | `/areas/:areaId/walls/:wallId/routes/:routeId/tick` | Implemented — style picker, star rating, personal note, photo (gym only); handles create + edit |
 | Add & tick gym route | `/areas/:areaId/walls/:wallId/new-tick` | Implemented — gym walls only; grade, type, hold colour, optional name + tick fields; warns about look-alike routes on the wall; one request (`newRoute` on the tick) |
 
 ## Climbing gyms
 
 Areas have `type: 'crag' | 'gym'` (gym badge, square map pin, Crag/Gym filters on Explore, Map and All ticks). In gyms, climbers add routes themselves while ticking and any climber can mark a route **retired** when it's taken down (restoring is admin-only). Retired routes drop out of wall/area route lists but ticks keep them — tick history fetches `/routes?includeRetired=true` so they still resolve. Unnamed gym routes display as "<Colour> route" via `utils/routeDisplayName.ts`.
+
+Gym ticks can carry a **photo** (so climbers remember a route after it's reset). `TickPhotoPicker` compresses in the browser on selection (`utils/compressImage.ts`: ≤ 1600 px long edge, JPEG q0.8, EXIF stripped), and the page uploads it with `PUT /users/:userId/ticks/:tickId/photo` (multipart part `image`) *after* the tick is saved — a failed upload leaves the tick saved and retries upload only. Responses expose a presigned `photoUrl` on the tick.
 
 ## Design system
 

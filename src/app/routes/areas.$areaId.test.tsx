@@ -38,7 +38,7 @@ vi.mock('../../features/walls/components/WallPhoto', () => ({
   ),
 }))
 vi.mock('../../features/routes/components/AreaRoutesList', () => ({
-  AreaRoutesList: () => null,
+  AreaRoutesList: () => <div data-testid="area-routes" />,
 }))
 
 // Importing the route module runs createFileRoute, populating h.Captured.
@@ -75,6 +75,24 @@ describe('AreaPage hero', () => {
     h.walls = [wall(1), wall(2)]
     renderPage()
     expect(screen.queryByTestId('wall-photo')).not.toBeInTheDocument()
-    expect(screen.getByText('photo')).toBeInTheDocument()
+    // Hero placeholder + the two wall cards' thumbnail placeholders (Walls is the default tab).
+    expect(screen.getAllByText('photo')).toHaveLength(3)
+  })
+})
+
+describe('AreaPage tabs', () => {
+  it('opens on the Walls tab when the area has several walls', () => {
+    h.walls = [wall(1), wall(2)]
+    renderPage()
+    expect(screen.getByText('Wall 1')).toBeInTheDocument()
+    expect(screen.getByText('Wall 2')).toBeInTheDocument()
+    expect(screen.queryByTestId('area-routes')).not.toBeInTheDocument()
+  })
+
+  it('falls back to Routes when a single-wall area hides the Walls tab', () => {
+    h.walls = [wall(12)]
+    renderPage()
+    expect(screen.queryByRole('button', { name: 'Walls' })).not.toBeInTheDocument()
+    expect(screen.getByTestId('area-routes')).toBeInTheDocument()
   })
 })

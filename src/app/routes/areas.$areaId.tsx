@@ -20,12 +20,14 @@ function AreaPage() {
   const childMatches = useChildMatches()
   const { areaId } = Route.useParams()
   const areaIdNum = Number(areaId)
-  const [activeTab, setActiveTab] = useState<AreaTab>('Routes')
+  const [selectedTab, setSelectedTab] = useState<AreaTab>('Walls')
   const { data: area, isLoading: areaLoading, isError: areaError } = useArea(areaIdNum)
   const { data: walls, isLoading: wallsLoading } = useWallsByArea(areaIdNum)
-  const visibleTabs = (walls?.length ?? 0) > 1
+  const visibleTabs: readonly AreaTab[] = (walls?.length ?? 0) > 1
     ? AREA_TABS
     : AREA_TABS.filter(t => t !== 'Walls')
+  // Walls is the default, but single-wall areas hide that tab — fall back to Routes.
+  const activeTab = visibleTabs.includes(selectedTab) ? selectedTab : 'Routes'
 
   if (childMatches.length > 0) return <Outlet />
   if (Number.isNaN(areaIdNum)) return <p className="p-4 text-ink-2">Invalid URL</p>
@@ -81,11 +83,11 @@ function AreaPage() {
         )}
       </div>
 
-      {/* Tabs */}
-      {areaLoading ? (
+      {/* Tabs — wait for walls too, so the default tab doesn't flick from Routes to Walls */}
+      {areaLoading || wallsLoading ? (
         <div className="h-10 mx-4 bg-paper-2 animate-pulse rounded" />
       ) : (
-        <TabBar tabs={visibleTabs} active={activeTab} onChange={setActiveTab} />
+        <TabBar tabs={visibleTabs} active={activeTab} onChange={setSelectedTab} />
       )}
 
       {/* Tab content */}

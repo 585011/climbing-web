@@ -5,6 +5,10 @@ import { fireEvent, render, screen } from '@testing-library/react'
 const h = vi.hoisted(() => ({
   Captured: null as React.ComponentType | null,
   navigate: vi.fn(),
+  area: { region: 'Norway' } as { region: string; type?: string },
+  createTick: vi.fn(),
+  uploadPhoto: vi.fn(),
+  compressImage: vi.fn(),
 }))
 
 vi.mock('@tanstack/react-router', () => ({
@@ -16,7 +20,7 @@ vi.mock('@tanstack/react-router', () => ({
 }))
 
 vi.mock('../../features/areas/hooks/useArea', () => ({
-  useArea: () => ({ data: { region: 'Norway' } }),
+  useArea: () => ({ data: h.area }),
 }))
 vi.mock('../../features/walls/hooks/useWall', () => ({
   useWall: () => ({ data: { name: 'North Wall' } }),
@@ -36,11 +40,15 @@ vi.mock('../../features/ticks/hooks/useTicksByUser', () => ({
   useTicksByUser: () => ({ data: ticks.map }),
 }))
 vi.mock('../../features/ticks/hooks/useCreateTick', () => ({
-  useCreateTick: () => ({ mutate: vi.fn(), isPending: false }),
+  useCreateTick: () => ({ mutate: h.createTick, isPending: false }),
 }))
 vi.mock('../../features/ticks/hooks/useUpdateTick', () => ({
   useUpdateTick: () => ({ mutate: vi.fn(), isPending: false }),
 }))
+vi.mock('../../features/ticks/hooks/useUploadTickPhoto', () => ({
+  useUploadTickPhoto: () => ({ mutate: h.uploadPhoto, isPending: false, isError: false }),
+}))
+vi.mock('../../utils/compressImage', () => ({ compressImage: h.compressImage }))
 
 // Importing the route module runs createFileRoute, populating h.Captured.
 import './areas.$areaId.walls.$wallId.routes.$routeId_.tick'
@@ -100,5 +108,45 @@ describe('LogTickPage edit mode', () => {
       .filter(s => s.className.includes('text-accent'))
     expect(litStars).toHaveLength(4)
     expect(screen.getByRole('button', { name: 'save' })).toBeEnabled()
+  })
+})
+
+describe('LogTickPage photo', () => {
+  afterEach(() => {
+    h.area = { region: 'Norway' }
+    h.createTick.mockReset()
+    h.uploadPhoto.mockReset()
+    h.navigate.mockReset()
+  })
+
+  it('offers no photo for crag routes', () => {
+    renderForm()
+    expect(screen.queryByLabelText('Tick photo file')).not.toBeInTheDocument()
+  })
+
+  it('uploads the compressed photo once the gym tick is created', async () => {
+    h.area = { region: 'Oslo', type: 'gym' }
+    const compressed = new File(['small'], 'route.jpg', { type: 'image/jpeg' })
+    h.compressImage.mockResolvedValue(compressed)
+    URL.createObjectURL = vi.fn(() => 'blob:preview')
+    URL.revokeObjectURL = vi.fn()
+    renderForm()
+
+    fireEvent.change(screen.getByLabelText('Tick photo file'), {
+      target: { files: [new File(['big'], 'route.png', { type: 'image/png' })] },
+    })
+    await screen.findByAltText('Route photo')
+    fireEvent.click(screen.getByRole('button', { name: /Onsight/ }))
+    fireEvent.click(screen.getByRole('button', { name: /save tick/ }))
+
+    // The tick is saved first; the photo goes up against the new tick's id.
+    expect(h.uploadPhoto).not.toHaveBeenCalled()
+    const [, { onSuccess }] = h.createTick.mock.calls[0]
+    onSuccess({ id: 55 })
+    expect(h.uploadPhoto).toHaveBeenCalledWith(
+      { userId: 7, tickId: 55, photo: compressed },
+      expect.objectContaining({ onSuccess: expect.any(Function) }),
+    )
+    expect(h.navigate).not.toHaveBeenCalled()
   })
 })

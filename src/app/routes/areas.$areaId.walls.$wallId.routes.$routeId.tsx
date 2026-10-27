@@ -6,6 +6,7 @@ import { useArea } from '../../features/areas/hooks/useArea'
 import { useTicksByUser } from '../../features/ticks/hooks/useTicksByUser'
 import { useCurrentUser } from '../../features/users/hooks/useCurrentUser'
 import { useRetireRoute } from '../../features/routes/hooks/useRetireRoute'
+import { WallImageViewer } from '../../features/walls/components/WallImageViewer'
 import { useIsAdmin } from '../../hooks/useIsAdmin'
 import { HoldColorChip } from '../../components/ui/HoldColorChip'
 import { routeDisplayName } from '../../utils/routeDisplayName'
@@ -30,6 +31,7 @@ function RoutePage() {
   const isAdmin = useIsAdmin()
   const { mutate: setRetired, isPending: isRetiring } = useRetireRoute()
   const [confirmRetire, setConfirmRetire] = useState(false)
+  const [photoOpen, setPhotoOpen] = useState(false)
 
   if (Number.isNaN(areaIdNum) || Number.isNaN(wallIdNum) || Number.isNaN(routeIdNum))
     return <p className="p-4 text-ink-2">Invalid URL</p>
@@ -170,7 +172,23 @@ function RoutePage() {
               {tick.personalNote && (
                 <p className="text-[13px] text-ink-2 italic">"{tick.personalNote}"</p>
               )}
+              {tick.photoUrl && (
+                <button
+                  onClick={() => setPhotoOpen(true)}
+                  aria-label="View tick photo fullscreen"
+                  className="mt-2 block w-full h-48 rounded-lg overflow-hidden"
+                >
+                  <img src={tick.photoUrl} alt="Your photo of this route" className="w-full h-full object-cover" />
+                </button>
+              )}
             </div>
+            {photoOpen && tick.photoUrl && (
+              <WallImageViewer
+                src={tick.photoUrl}
+                alt="Your photo of this route"
+                onClose={() => setPhotoOpen(false)}
+              />
+            )}
           </>
         ) : (
           <p className="text-[13px] text-ink-3 leading-relaxed">

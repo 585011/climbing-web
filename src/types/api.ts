@@ -62,6 +62,11 @@ export const UserRouteTickSchema = z.object({
   style: z.string().nullable().transform(v => v ?? ''),
   rating: z.number().nullable().transform(v => v ?? 0),
   personalNote: z.string().nullable().transform(v => v ?? ''),
+  /**
+   * Gym ticks only. Short-lived presigned URL — always use the latest response.
+   * Absent until the API deploy that adds tick photos.
+   */
+  photoUrl: z.string().nullish().transform(v => v ?? null),
 })
 
 export type UserRouteTick = z.infer<typeof UserRouteTickSchema>
