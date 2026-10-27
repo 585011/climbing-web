@@ -83,7 +83,7 @@ Detail pages (not tabs):
 |---|---|---|
 | Area (Crag) | `/areas/:areaId` | Implemented — hero, info, tabs (Walls/Routes/Approach/Info); Walls is the default tab but is hidden when ≤ 1 wall (falls back to Routes); Approach tab shows per-wall `approachInfo` |
 | Wall | `/areas/:areaId/walls/:wallId` | Implemented — hero, route list |
-| Route | `/areas/:areaId/walls/:wallId/routes/:routeId` | Shell — breadcrumb, grade, meta, topo placeholder, description, tick section |
+| Route | `/areas/:areaId/walls/:wallId/routes/:routeId` | Shell — breadcrumb, grade, meta, topo slot (your gym tick's photo if you have one, else a placeholder), description, tick section |
 | Log a tick | `/areas/:areaId/walls/:wallId/routes/:routeId/tick` | Implemented — style picker, star rating, personal note, photo (gym only); handles create + edit |
 | Add & tick gym route | `/areas/:areaId/walls/:wallId/new-tick` | Implemented — gym walls only; grade, type, hold colour, optional name + tick fields; warns about look-alike routes on the wall; one request (`newRoute` on the tick) |
 

@@ -119,10 +119,27 @@ function RoutePage() {
         </div>
       )}
 
-      {/* Topo photo placeholder */}
-      <div className="mx-4 mb-3 h-48 bg-paper-2 rounded-xl flex items-center justify-center text-ink-3 text-sm">
-        topo photo
-      </div>
+      {/* Topo photo — your tick's photo when you have one (gym ticks), else a placeholder */}
+      {tick?.photoUrl ? (
+        <button
+          onClick={() => setPhotoOpen(true)}
+          aria-label="View tick photo fullscreen"
+          className="mx-4 mb-3 h-48 bg-paper-2 rounded-xl overflow-hidden"
+        >
+          <img src={tick.photoUrl} alt="Your photo of this route" className="w-full h-full object-cover" />
+        </button>
+      ) : (
+        <div className="mx-4 mb-3 h-48 bg-paper-2 rounded-xl flex items-center justify-center text-ink-3 text-sm">
+          topo photo
+        </div>
+      )}
+      {photoOpen && tick?.photoUrl && (
+        <WallImageViewer
+          src={tick.photoUrl}
+          alt="Your photo of this route"
+          onClose={() => setPhotoOpen(false)}
+        />
+      )}
 
       {/* Description */}
       <div className="px-4 mb-3">
@@ -172,23 +189,7 @@ function RoutePage() {
               {tick.personalNote && (
                 <p className="text-[13px] text-ink-2 italic">"{tick.personalNote}"</p>
               )}
-              {tick.photoUrl && (
-                <button
-                  onClick={() => setPhotoOpen(true)}
-                  aria-label="View tick photo fullscreen"
-                  className="mt-2 block w-full h-48 rounded-lg overflow-hidden"
-                >
-                  <img src={tick.photoUrl} alt="Your photo of this route" className="w-full h-full object-cover" />
-                </button>
-              )}
             </div>
-            {photoOpen && tick.photoUrl && (
-              <WallImageViewer
-                src={tick.photoUrl}
-                alt="Your photo of this route"
-                onClose={() => setPhotoOpen(false)}
-              />
-            )}
           </>
         ) : (
           <p className="text-[13px] text-ink-3 leading-relaxed">
