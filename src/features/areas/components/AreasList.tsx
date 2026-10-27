@@ -133,7 +133,7 @@ export const AreasList = ({ imageByAreaId }: AreasListProps) => {
               onChange={(e) => setAreaType(e.target.value as AreaTypeFilter)}
               className="appearance-none text-[12px] border border-ink/30 rounded-full pl-3 pr-7 py-1 text-ink-2 bg-paper"
             >
-              <option value="">Crags &amp; gyms</option>
+              <option value="">All</option>
               <option value="crag">Crags</option>
               <option value="gym">Gyms</option>
             </select>
