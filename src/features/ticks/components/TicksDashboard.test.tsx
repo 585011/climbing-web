@@ -13,7 +13,7 @@ import { TicksDashboard } from './TicksDashboard'
 
 const route = (id: number, grade: string, name = `R${id}`): ClimbingRoute => ({
   id, wallId: 20, name, grade, length: 20, style: 'sport', bolts: 8,
-  ropeLengths: 1, firstAscendant: '', description: '', createdAt: '2026-01-01T00:00:00Z',
+  ropeLengths: 1, firstAscendant: '', description: '', createdAt: '2026-01-01T00:00:00Z', holdColor: '', retiredAt: null,
 })
 const item = (id: number, grade: string, tickedAt: string): EnrichedTick => ({
   tick: {

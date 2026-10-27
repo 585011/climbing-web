@@ -16,6 +16,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as TicksAllRouteImport } from './routes/ticks_.all'
 import { Route as AreasAreaIdRouteImport } from './routes/areas.$areaId'
 import { Route as AreasAreaIdWallsWallIdRouteImport } from './routes/areas.$areaId.walls.$wallId'
+import { Route as AreasAreaIdWallsWallIdNewTickRouteImport } from './routes/areas.$areaId.walls.$wallId.new-tick'
 import { Route as AreasAreaIdWallsWallIdRoutesRouteIdRouteImport } from './routes/areas.$areaId.walls.$wallId.routes.$routeId'
 import { Route as AreasAreaIdWallsWallIdRoutesRouteIdTickRouteImport } from './routes/areas.$areaId.walls.$wallId.routes.$routeId_.tick'
 
@@ -54,6 +55,12 @@ const AreasAreaIdWallsWallIdRoute = AreasAreaIdWallsWallIdRouteImport.update({
   path: '/walls/$wallId',
   getParentRoute: () => AreasAreaIdRoute,
 } as any)
+const AreasAreaIdWallsWallIdNewTickRoute =
+  AreasAreaIdWallsWallIdNewTickRouteImport.update({
+    id: '/new-tick',
+    path: '/new-tick',
+    getParentRoute: () => AreasAreaIdWallsWallIdRoute,
+  } as any)
 const AreasAreaIdWallsWallIdRoutesRouteIdRoute =
   AreasAreaIdWallsWallIdRoutesRouteIdRouteImport.update({
     id: '/routes/$routeId',
@@ -75,6 +82,7 @@ export interface FileRoutesByFullPath {
   '/areas/$areaId': typeof AreasAreaIdRouteWithChildren
   '/ticks/all': typeof TicksAllRoute
   '/areas/$areaId/walls/$wallId': typeof AreasAreaIdWallsWallIdRouteWithChildren
+  '/areas/$areaId/walls/$wallId/new-tick': typeof AreasAreaIdWallsWallIdNewTickRoute
   '/areas/$areaId/walls/$wallId/routes/$routeId': typeof AreasAreaIdWallsWallIdRoutesRouteIdRoute
   '/areas/$areaId/walls/$wallId/routes/$routeId/tick': typeof AreasAreaIdWallsWallIdRoutesRouteIdTickRoute
 }
@@ -86,6 +94,7 @@ export interface FileRoutesByTo {
   '/areas/$areaId': typeof AreasAreaIdRouteWithChildren
   '/ticks/all': typeof TicksAllRoute
   '/areas/$areaId/walls/$wallId': typeof AreasAreaIdWallsWallIdRouteWithChildren
+  '/areas/$areaId/walls/$wallId/new-tick': typeof AreasAreaIdWallsWallIdNewTickRoute
   '/areas/$areaId/walls/$wallId/routes/$routeId': typeof AreasAreaIdWallsWallIdRoutesRouteIdRoute
   '/areas/$areaId/walls/$wallId/routes/$routeId/tick': typeof AreasAreaIdWallsWallIdRoutesRouteIdTickRoute
 }
@@ -98,6 +107,7 @@ export interface FileRoutesById {
   '/areas/$areaId': typeof AreasAreaIdRouteWithChildren
   '/ticks_/all': typeof TicksAllRoute
   '/areas/$areaId/walls/$wallId': typeof AreasAreaIdWallsWallIdRouteWithChildren
+  '/areas/$areaId/walls/$wallId/new-tick': typeof AreasAreaIdWallsWallIdNewTickRoute
   '/areas/$areaId/walls/$wallId/routes/$routeId': typeof AreasAreaIdWallsWallIdRoutesRouteIdRoute
   '/areas/$areaId/walls/$wallId/routes/$routeId_/tick': typeof AreasAreaIdWallsWallIdRoutesRouteIdTickRoute
 }
@@ -111,6 +121,7 @@ export interface FileRouteTypes {
     | '/areas/$areaId'
     | '/ticks/all'
     | '/areas/$areaId/walls/$wallId'
+    | '/areas/$areaId/walls/$wallId/new-tick'
     | '/areas/$areaId/walls/$wallId/routes/$routeId'
     | '/areas/$areaId/walls/$wallId/routes/$routeId/tick'
   fileRoutesByTo: FileRoutesByTo
@@ -122,6 +133,7 @@ export interface FileRouteTypes {
     | '/areas/$areaId'
     | '/ticks/all'
     | '/areas/$areaId/walls/$wallId'
+    | '/areas/$areaId/walls/$wallId/new-tick'
     | '/areas/$areaId/walls/$wallId/routes/$routeId'
     | '/areas/$areaId/walls/$wallId/routes/$routeId/tick'
   id:
@@ -133,6 +145,7 @@ export interface FileRouteTypes {
     | '/areas/$areaId'
     | '/ticks_/all'
     | '/areas/$areaId/walls/$wallId'
+    | '/areas/$areaId/walls/$wallId/new-tick'
     | '/areas/$areaId/walls/$wallId/routes/$routeId'
     | '/areas/$areaId/walls/$wallId/routes/$routeId_/tick'
   fileRoutesById: FileRoutesById
@@ -197,6 +210,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AreasAreaIdWallsWallIdRouteImport
       parentRoute: typeof AreasAreaIdRoute
     }
+    '/areas/$areaId/walls/$wallId/new-tick': {
+      id: '/areas/$areaId/walls/$wallId/new-tick'
+      path: '/new-tick'
+      fullPath: '/areas/$areaId/walls/$wallId/new-tick'
+      preLoaderRoute: typeof AreasAreaIdWallsWallIdNewTickRouteImport
+      parentRoute: typeof AreasAreaIdWallsWallIdRoute
+    }
     '/areas/$areaId/walls/$wallId/routes/$routeId': {
       id: '/areas/$areaId/walls/$wallId/routes/$routeId'
       path: '/routes/$routeId'
@@ -215,12 +235,14 @@ declare module '@tanstack/react-router' {
 }
 
 interface AreasAreaIdWallsWallIdRouteChildren {
+  AreasAreaIdWallsWallIdNewTickRoute: typeof AreasAreaIdWallsWallIdNewTickRoute
   AreasAreaIdWallsWallIdRoutesRouteIdRoute: typeof AreasAreaIdWallsWallIdRoutesRouteIdRoute
   AreasAreaIdWallsWallIdRoutesRouteIdTickRoute: typeof AreasAreaIdWallsWallIdRoutesRouteIdTickRoute
 }
 
 const AreasAreaIdWallsWallIdRouteChildren: AreasAreaIdWallsWallIdRouteChildren =
   {
+    AreasAreaIdWallsWallIdNewTickRoute: AreasAreaIdWallsWallIdNewTickRoute,
     AreasAreaIdWallsWallIdRoutesRouteIdRoute:
       AreasAreaIdWallsWallIdRoutesRouteIdRoute,
     AreasAreaIdWallsWallIdRoutesRouteIdTickRoute:

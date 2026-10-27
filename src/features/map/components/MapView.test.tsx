@@ -62,7 +62,7 @@ const area = (id: number): ClimbingArea => ({
   latitude: 60 + id / 100,
   longitude: 5 + id / 100,
   region: 'Bergen',
-  createdAt: '2026-01-01T00:00:00Z',
+  createdAt: '2026-01-01T00:00:00Z', type: 'crag',
 })
 
 // Capture ResizeObserver callbacks so tests can fire them; jsdom has no RO.

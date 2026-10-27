@@ -29,7 +29,7 @@ const area = (id: number, name: string): ClimbingArea => ({
   latitude: 60,
   longitude: 5,
   region: 'Bergen',
-  createdAt: '2026-01-01T00:00:00Z',
+  createdAt: '2026-01-01T00:00:00Z', type: 'crag',
 })
 
 describe('AreaList', () => {

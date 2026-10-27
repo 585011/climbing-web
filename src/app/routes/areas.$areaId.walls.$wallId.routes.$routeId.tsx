@@ -1,9 +1,14 @@
+import { useState } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useRoute } from '../../features/routes/hooks/useRoute'
 import { useWall } from '../../features/walls/hooks/useWall'
 import { useArea } from '../../features/areas/hooks/useArea'
 import { useTicksByUser } from '../../features/ticks/hooks/useTicksByUser'
 import { useCurrentUser } from '../../features/users/hooks/useCurrentUser'
+import { useRetireRoute } from '../../features/routes/hooks/useRetireRoute'
+import { useIsAdmin } from '../../hooks/useIsAdmin'
+import { HoldColorChip } from '../../components/ui/HoldColorChip'
+import { routeDisplayName } from '../../utils/routeDisplayName'
 
 export const Route = createFileRoute('/areas/$areaId/walls/$wallId/routes/$routeId')({
   component: RoutePage,
@@ -22,6 +27,9 @@ function RoutePage() {
   const { data: currentUser } = useCurrentUser()
   const userId = currentUser?.id ?? 0
   const { data: ticksMap = new Map() } = useTicksByUser(userId)
+  const isAdmin = useIsAdmin()
+  const { mutate: setRetired, isPending: isRetiring } = useRetireRoute()
+  const [confirmRetire, setConfirmRetire] = useState(false)
 
   if (Number.isNaN(areaIdNum) || Number.isNaN(wallIdNum) || Number.isNaN(routeIdNum))
     return <p className="p-4 text-ink-2">Invalid URL</p>
@@ -33,6 +41,18 @@ function RoutePage() {
 
   const goToTickForm = () =>
     navigate({ to: '/areas/$areaId/walls/$wallId/routes/$routeId/tick', params: { areaId, wallId, routeId } })
+
+  // Gym routes rotate often, so any climber may retire one; restoring is admin-only.
+  const isGym = area?.type === 'gym'
+  const canRetire = !!route && !route.retiredAt && (isGym || isAdmin)
+  const canRestore = !!route?.retiredAt && isAdmin
+  const handleRetire = (retired: boolean) => {
+    if (!route) return
+    setRetired(
+      { routeId: route.id, wallId: route.wallId, retired },
+      { onSuccess: () => setConfirmRetire(false) }
+    )
+  }
 
   const metaParts = [
     route && route.length > 0 ? `${route.length}m` : null,
@@ -72,7 +92,7 @@ function RoutePage() {
           </div>
         ) : (
           <div className="flex items-start justify-between gap-3">
-            <h1 className="text-2xl font-bold text-ink leading-tight">{route?.name}</h1>
+            <h1 className="text-2xl font-bold text-ink leading-tight">{route && routeDisplayName(route)}</h1>
             {route?.grade && (
               <div className="shrink-0 rounded-lg bg-paper-2 border border-ink/15 px-2.5 py-1 mt-0.5">
                 <span className="text-[13px] font-bold text-ink">{route.grade}</span>
@@ -83,10 +103,18 @@ function RoutePage() {
       </div>
 
       {/* Meta row */}
-      {!isLoading && metaParts.length > 0 && (
-        <p className="px-4 pb-3 text-[12px] text-ink-3">
+      {!isLoading && (metaParts.length > 0 || route?.holdColor) && (
+        <p className="px-4 pb-3 text-[12px] text-ink-3 flex items-center gap-2">
+          {route?.holdColor && <HoldColorChip color={route.holdColor} />}
           {metaParts.join(' · ')}
         </p>
+      )}
+
+      {/* Retired banner */}
+      {route?.retiredAt && (
+        <div className="mx-4 mb-3 rounded-xl border border-ink/20 bg-paper-2 px-3 py-2 text-[13px] text-ink-2">
+          This route has been taken down. Your tick is kept.
+        </div>
       )}
 
       {/* Topo photo placeholder */}
@@ -150,6 +178,44 @@ function RoutePage() {
           </p>
         )}
       </div>
+
+      {/* Retire / restore */}
+      {(canRetire || canRestore) && (
+        <div className="px-4 mb-2">
+          {canRestore ? (
+            <button
+              onClick={() => handleRetire(false)}
+              disabled={isRetiring}
+              className="w-full py-3 rounded-xl border border-ink/20 text-[13px] text-ink-2 disabled:opacity-50"
+            >
+              Restore route
+            </button>
+          ) : confirmRetire ? (
+            <div className="flex gap-2">
+              <button
+                onClick={() => setConfirmRetire(false)}
+                className="flex-1 py-3 rounded-xl border border-ink/20 text-[13px] text-ink-2"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleRetire(true)}
+                disabled={isRetiring}
+                className="flex-1 py-3 rounded-xl bg-ink text-paper text-[13px] font-semibold disabled:opacity-50"
+              >
+                {isRetiring ? 'Retiring…' : 'Yes, it’s gone'}
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => setConfirmRetire(true)}
+              className="w-full py-3 rounded-xl border border-ink/20 text-[13px] text-ink-2"
+            >
+              Route taken down? Mark as retired
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Sticky bottom bar */}
       <div className="px-4 pb-4 pt-2">

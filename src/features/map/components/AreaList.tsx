@@ -1,5 +1,6 @@
 import { Link } from '@tanstack/react-router'
 import type { ClimbingArea } from '../../../types/api'
+import { GymBadge } from '../../../components/ui/GymBadge'
 
 export const AreaList = ({
   areas,
@@ -21,7 +22,10 @@ export const AreaList = ({
           onClick={() => onSelect(area.id)}
           className="flex items-center justify-between gap-3 py-2.5 border-b border-dashed border-ink/15 active:bg-paper-2"
         >
-          <span className="text-[14px] font-semibold text-ink truncate">{area.name}</span>
+          <span className="flex items-center gap-1.5 min-w-0">
+            <span className="text-[14px] font-semibold text-ink truncate">{area.name}</span>
+            {area.type === 'gym' && <GymBadge />}
+          </span>
           {area.region && <span className="shrink-0 text-[12px] text-ink-3">{area.region}</span>}
         </Link>
       ))}

@@ -4,6 +4,7 @@ import { useAreas } from '../hooks/useAreas'
 import { haversineKm } from '../utils/haversineKm'
 import { useDebouncedValue } from '../../../hooks/useDebouncedValue'
 import type { ClimbingArea } from '../../../types/api'
+import { GymBadge } from '../../../components/ui/GymBadge'
 
 const SEARCH_MAX = 100
 
@@ -23,7 +24,10 @@ const CragCard = ({ area, imageUrl }: { area: ClimbingArea; imageUrl?: string })
         'photo'
       )}
     </div>
-    <span className="text-[14px] font-semibold text-ink leading-tight">{area.name}</span>
+    <span className="flex items-center gap-1.5 min-w-0">
+      <span className="text-[14px] font-semibold text-ink leading-tight">{area.name}</span>
+      {area.type === 'gym' && <GymBadge />}
+    </span>
     <span className="text-[12px] text-ink-3 leading-tight truncate">{area.region || area.description}</span>
   </Link>
 )
@@ -42,12 +46,14 @@ interface AreasListProps {
 }
 
 type SortBy = 'name' | 'distance'
+type AreaTypeFilter = '' | 'crag' | 'gym'
 
 export const AreasList = ({ imageByAreaId }: AreasListProps) => {
   const { data: areas, isLoading, isError, refetch } = useAreas()
   const [search, setSearch] = useState('')
   const [activeFilter, setActiveFilter] = useState<Filter>('Nearby')
   const [region, setRegion] = useState('')
+  const [areaType, setAreaType] = useState<AreaTypeFilter>('')
   const [sortBy, setSortBy] = useState<SortBy>('name')
   const [position, setPosition] = useState<{ latitude: number; longitude: number } | null>(null)
 
@@ -61,7 +67,8 @@ export const AreasList = ({ imageByAreaId }: AreasListProps) => {
   const filtered = (areas ?? []).filter(
     a =>
       a.name.toLowerCase().includes(debouncedSearch.toLowerCase()) &&
-      (!region || a.region === region)
+      (!region || a.region === region) &&
+      (!areaType || a.type === areaType)
   )
 
   const sorted = [...filtered].sort(
@@ -93,6 +100,20 @@ export const AreasList = ({ imageByAreaId }: AreasListProps) => {
       {/* header */}
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold text-ink">Crags</h1>
+        <div className="flex items-center gap-2">
+        <div className="relative">
+          <select
+            aria-label="Filter by type"
+            value={areaType}
+            onChange={e => setAreaType(e.target.value as AreaTypeFilter)}
+            className="appearance-none text-[12px] border border-ink/30 rounded-full pl-3 pr-7 py-1 text-ink-2 bg-paper"
+          >
+            <option value="">Crags &amp; gyms</option>
+            <option value="crag">Crags</option>
+            <option value="gym">Gyms</option>
+          </select>
+          <span aria-hidden className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-ink-2">▾</span>
+        </div>
         <div className="relative">
           <select
             aria-label="Filter by region"
@@ -106,6 +127,7 @@ export const AreasList = ({ imageByAreaId }: AreasListProps) => {
             ))}
           </select>
           <span aria-hidden className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-ink-2">▾</span>
+        </div>
         </div>
       </div>
 

@@ -1,5 +1,7 @@
 import { Link } from '@tanstack/react-router'
 import type { ClimbingRoute } from '../../../types/api'
+import { HoldColorChip } from '../../../components/ui/HoldColorChip'
+import { routeDisplayName } from '../../../utils/routeDisplayName'
 
 interface RouteRowProps {
   route: ClimbingRoute
@@ -27,8 +29,11 @@ export function RouteRow({ route, index, ticked, onUntick, areaId }: RouteRowPro
         </div>
 
         <div className="flex-1 min-w-0">
-          <p className="text-[14px] font-semibold text-ink leading-tight truncate">{route.name}</p>
+          <p className="text-[14px] font-semibold text-ink leading-tight truncate">
+            {routeDisplayName(route)}
+          </p>
           <p className="text-[11px] text-ink-3 mt-0.5">
+            {route.holdColor && <HoldColorChip color={route.holdColor} />}
             {route.length > 0 && <> · {route.length}m</>}
             {route.style && <> · {route.style}</>}
             {route.bolts > 0 && <> · {route.bolts} bolts</>}

@@ -7,7 +7,7 @@ const tick = (id: number, routeId: number, tickedAt: string): UserRouteTick => (
 })
 const route = (id: number, wallId: number, name: string): ClimbingRoute => ({
   id, wallId, name, grade: '6+', length: 20, style: 'sport', bolts: 8,
-  ropeLengths: 1, firstAscendant: '', description: '', createdAt: '2026-01-01T00:00:00Z',
+  ropeLengths: 1, firstAscendant: '', description: '', createdAt: '2026-01-01T00:00:00Z', holdColor: '', retiredAt: null,
 })
 const wall = (id: number, areaId: number, name: string): Wall => ({
   id, areaId, name, description: '', latitude: null, longitude: null,
@@ -15,7 +15,7 @@ const wall = (id: number, areaId: number, name: string): Wall => ({
 })
 const area = (id: number, name: string): ClimbingArea => ({
   id, name, description: '', latitude: 0, longitude: 0, region: 'Bergen',
-  createdAt: '2026-01-01T00:00:00Z',
+  createdAt: '2026-01-01T00:00:00Z', type: 'crag',
 })
 
 describe('enrichTicks', () => {

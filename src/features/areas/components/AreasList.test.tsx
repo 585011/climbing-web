@@ -21,7 +21,7 @@ const area = (id: number, name: string): ClimbingArea => ({
   latitude: 0,
   longitude: 0,
   region: 'Norway',
-  createdAt: '2026-06-12T00:00:00Z',
+  createdAt: '2026-06-12T00:00:00Z', type: 'crag',
 })
 
 describe('AreasList search', () => {
@@ -169,5 +169,26 @@ describe('AreasList error state', () => {
     const { container } = render(<AreasList />)
 
     expect(container.querySelector('.animate-pulse')).not.toBeInTheDocument()
+  })
+})
+
+describe('AreasList type filter', () => {
+  it('shows a gym badge and filters crags vs gyms', () => {
+    useAreas.mockReturnValue({
+      data: [area(1, 'Bergen'), { ...area(2, 'BKS Laksevåg'), type: 'gym' }],
+      isLoading: false,
+      isError: false,
+    })
+    render(<AreasList />)
+
+    expect(screen.getByText('Gym')).toBeInTheDocument()
+
+    fireEvent.change(screen.getByLabelText('Filter by type'), { target: { value: 'gym' } })
+    expect(screen.getByText('BKS Laksevåg')).toBeInTheDocument()
+    expect(screen.queryByText('Bergen')).not.toBeInTheDocument()
+
+    fireEvent.change(screen.getByLabelText('Filter by type'), { target: { value: 'crag' } })
+    expect(screen.getByText('Bergen')).toBeInTheDocument()
+    expect(screen.queryByText('BKS Laksevåg')).not.toBeInTheDocument()
   })
 })
