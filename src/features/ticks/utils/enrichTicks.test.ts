@@ -3,7 +3,7 @@ import { enrichTicks } from './enrichTicks'
 import type { ClimbingArea, ClimbingRoute, UserRouteTick, Wall } from '../../../types/api'
 
 const tick = (id: number, routeId: number, tickedAt: string): UserRouteTick => ({
-  id, userId: 7, routeId, tickedAt, style: 'redpoint', rating: 3, personalNote: '', photoUrl: null,
+  id, userId: 7, routeId, name: '', tickedAt, style: 'redpoint', rating: 3, personalNote: '', photoUrl: null,
 })
 const route = (id: number, wallId: number, name: string): ClimbingRoute => ({
   id, wallId, name, grade: '6+', length: 20, style: 'sport', bolts: 8,

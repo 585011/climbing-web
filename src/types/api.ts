@@ -103,6 +103,10 @@ export const UserRouteTickSchema = z.object({
   id: z.number(),
   userId: z.number(),
   routeId: z.number(),
+  name: z
+    .string()
+    .nullish()
+    .transform((v) => v ?? ""),
   tickedAt: z.string(),
   style: z
     .string()

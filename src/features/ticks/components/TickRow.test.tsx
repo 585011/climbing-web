@@ -13,7 +13,7 @@ vi.mock('@tanstack/react-router', () => ({
 import { TickRow } from './TickRow'
 
 const tick = (over: Partial<UserRouteTick> = {}): UserRouteTick => ({
-  id: 1, userId: 7, routeId: 10, tickedAt: '2026-05-12T10:00:00Z',
+  id: 1, userId: 7, routeId: 10, name: '', tickedAt: '2026-05-12T10:00:00Z',
   style: 'redpoint', rating: 4, personalNote: '', photoUrl: null, ...over,
 })
 const route: ClimbingRoute = {
