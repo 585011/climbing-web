@@ -1,17 +1,23 @@
-import { useState } from 'react'
-import { Link } from '@tanstack/react-router'
-import { useAreas } from '../hooks/useAreas'
-import { haversineKm } from '../utils/haversineKm'
-import { useDebouncedValue } from '../../../hooks/useDebouncedValue'
-import type { ClimbingArea } from '../../../types/api'
-import { GymBadge } from '../../../components/ui/GymBadge'
+import { useState } from "react";
+import { Link } from "@tanstack/react-router";
+import { useAreas } from "../hooks/useAreas";
+import { haversineKm } from "../utils/haversineKm";
+import { useDebouncedValue } from "../../../hooks/useDebouncedValue";
+import type { ClimbingArea } from "../../../types/api";
+import { GymBadge } from "../../../components/ui/GymBadge";
 
-const SEARCH_MAX = 100
+const SEARCH_MAX = 100;
 
-const FILTERS = ['Nearby', 'Sport', 'Trad', 'Boulder'] as const
-type Filter = (typeof FILTERS)[number]
+const FILTERS = ["Nearby", "Sport", "Trad", "Boulder"] as const;
+type Filter = (typeof FILTERS)[number];
 
-const CragCard = ({ area, imageUrl }: { area: ClimbingArea; imageUrl?: string }) => (
+const CragCard = ({
+  area,
+  imageUrl,
+}: {
+  area: ClimbingArea;
+  imageUrl?: string;
+}) => (
   <Link
     to="/areas/$areaId"
     params={{ areaId: String(area.id) }}
@@ -19,18 +25,28 @@ const CragCard = ({ area, imageUrl }: { area: ClimbingArea; imageUrl?: string })
   >
     <div className="h-18 rounded-lg bg-paper-2 border border-ink/10 overflow-hidden flex items-center justify-center text-ink-3 text-[10px]">
       {imageUrl ? (
-        <img src={imageUrl} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
+        <img
+          src={imageUrl}
+          alt=""
+          loading="lazy"
+          decoding="async"
+          className="h-full w-full object-cover"
+        />
       ) : (
-        'photo'
+        "photo"
       )}
     </div>
     <span className="flex items-center gap-1.5 min-w-0">
-      <span className="text-[14px] font-semibold text-ink leading-tight">{area.name}</span>
-      {area.type === 'gym' && <GymBadge />}
+      <span className="text-[14px] font-semibold text-ink leading-tight">
+        {area.name}
+      </span>
+      {area.type === "gym" && <GymBadge />}
     </span>
-    <span className="text-[12px] text-ink-3 leading-tight truncate">{area.region || area.description}</span>
+    <span className="text-[12px] text-ink-3 leading-tight truncate">
+      {area.region || area.description}
+    </span>
   </Link>
-)
+);
 
 const SkeletonCard = () => (
   <div className="flex flex-col gap-2 rounded-xl border border-ink/10 bg-paper p-3">
@@ -38,62 +54,71 @@ const SkeletonCard = () => (
     <div className="h-3 w-3/4 rounded bg-paper-2 animate-pulse" />
     <div className="h-2.5 w-1/2 rounded bg-paper-2 animate-pulse" />
   </div>
-)
+);
 
 interface AreasListProps {
   /** Area id → representative wall photo URL, resolved by the caller (short-lived presigned URLs). */
-  imageByAreaId?: Map<number, string>
+  imageByAreaId?: Map<number, string>;
 }
 
-type SortBy = 'name' | 'distance'
-type AreaTypeFilter = '' | 'crag' | 'gym'
+type SortBy = "name" | "distance";
+type AreaTypeFilter = "" | "crag" | "gym";
 
 export const AreasList = ({ imageByAreaId }: AreasListProps) => {
-  const { data: areas, isLoading, isError, refetch } = useAreas()
-  const [search, setSearch] = useState('')
-  const [activeFilter, setActiveFilter] = useState<Filter>('Nearby')
-  const [region, setRegion] = useState('')
-  const [areaType, setAreaType] = useState<AreaTypeFilter>('')
-  const [sortBy, setSortBy] = useState<SortBy>('name')
-  const [position, setPosition] = useState<{ latitude: number; longitude: number } | null>(null)
+  const { data: areas, isLoading, isError, refetch } = useAreas();
+  const [search, setSearch] = useState("");
+  const [activeFilter, setActiveFilter] = useState<Filter>("Nearby");
+  const [region, setRegion] = useState("");
+  const [areaType, setAreaType] = useState<AreaTypeFilter>("");
+  const [sortBy, setSortBy] = useState<SortBy>("name");
+  const [position, setPosition] = useState<{
+    latitude: number;
+    longitude: number;
+  } | null>(null);
 
   // Keep `search` for instant input echo, but filter on the debounced value so
   // work runs ~300ms after typing stops (this is where future server-side
   // search will hang off).
-  const debouncedSearch = useDebouncedValue(search, 300)
+  const debouncedSearch = useDebouncedValue(search, 300);
 
-  const regions = [...new Set((areas ?? []).map(a => a.region).filter(Boolean))].sort()
+  const regions = [
+    ...new Set((areas ?? []).map((a) => a.region).filter(Boolean)),
+  ].sort();
 
   const filtered = (areas ?? []).filter(
-    a =>
+    (a) =>
       a.name.toLowerCase().includes(debouncedSearch.toLowerCase()) &&
       (!region || a.region === region) &&
-      (!areaType || a.type === areaType)
-  )
+      (!areaType || a.type === areaType),
+  );
 
   const sorted = [...filtered].sort(
-    sortBy === 'distance' && position
+    sortBy === "distance" && position
       ? (a, b) => haversineKm(position, a) - haversineKm(position, b)
-      : (a, b) => a.name.localeCompare(b.name)
-  )
+      : (a, b) => a.name.localeCompare(b.name),
+  );
 
   const handleSortChange = (value: string) => {
-    if (value !== 'distance') {
-      setSortBy('name')
-      return
+    if (value !== "distance") {
+      setSortBy("name");
+      return;
     }
     // Geolocation is requested on demand, only when distance sort is chosen.
     if (position) {
-      setSortBy('distance')
-      return
+      setSortBy("distance");
+      return;
     }
-    if (!navigator.geolocation) return
-    setSortBy('distance')
+    if (!navigator.geolocation) return;
+    setSortBy("distance");
     navigator.geolocation.getCurrentPosition(
-      pos => setPosition({ latitude: pos.coords.latitude, longitude: pos.coords.longitude }),
-      () => setSortBy('name')
-    )
-  }
+      (pos) =>
+        setPosition({
+          latitude: pos.coords.latitude,
+          longitude: pos.coords.longitude,
+        }),
+      () => setSortBy("name"),
+    );
+  };
 
   return (
     <div className="flex flex-col gap-3 px-4 pt-4 pb-2">
@@ -101,33 +126,45 @@ export const AreasList = ({ imageByAreaId }: AreasListProps) => {
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold text-ink">Crags</h1>
         <div className="flex items-center gap-2">
-        <div className="relative">
-          <select
-            aria-label="Filter by type"
-            value={areaType}
-            onChange={e => setAreaType(e.target.value as AreaTypeFilter)}
-            className="appearance-none text-[12px] border border-ink/30 rounded-full pl-3 pr-7 py-1 text-ink-2 bg-paper"
-          >
-            <option value="">Crags &amp; gyms</option>
-            <option value="crag">Crags</option>
-            <option value="gym">Gyms</option>
-          </select>
-          <span aria-hidden className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-ink-2">▾</span>
-        </div>
-        <div className="relative">
-          <select
-            aria-label="Filter by region"
-            value={region}
-            onChange={e => setRegion(e.target.value)}
-            className="appearance-none text-[12px] border border-ink/30 rounded-full pl-3 pr-7 py-1 text-ink-2 bg-paper"
-          >
-            <option value="">All regions</option>
-            {regions.map(r => (
-              <option key={r} value={r}>{r}</option>
-            ))}
-          </select>
-          <span aria-hidden className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-ink-2">▾</span>
-        </div>
+          <div className="relative">
+            <select
+              aria-label="Filter by type"
+              value={areaType}
+              onChange={(e) => setAreaType(e.target.value as AreaTypeFilter)}
+              className="appearance-none text-[12px] border border-ink/30 rounded-full pl-3 pr-7 py-1 text-ink-2 bg-paper"
+            >
+              <option value="">All</option>
+              <option value="crag">Crags</option>
+              <option value="gym">Gyms</option>
+            </select>
+            <span
+              aria-hidden
+              className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-ink-2"
+            >
+              ▾
+            </span>
+          </div>
+          <div className="relative">
+            <select
+              aria-label="Filter by region"
+              value={region}
+              onChange={(e) => setRegion(e.target.value)}
+              className="appearance-none text-[12px] border border-ink/30 rounded-full pl-3 pr-7 py-1 text-ink-2 bg-paper"
+            >
+              <option value="">All regions</option>
+              {regions.map((r) => (
+                <option key={r} value={r}>
+                  {r}
+                </option>
+              ))}
+            </select>
+            <span
+              aria-hidden
+              className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-ink-2"
+            >
+              ▾
+            </span>
+          </div>
         </div>
       </div>
 
@@ -138,7 +175,7 @@ export const AreasList = ({ imageByAreaId }: AreasListProps) => {
           type="text"
           placeholder="Search crags, routes…"
           value={search}
-          onChange={e => setSearch(e.target.value)}
+          onChange={(e) => setSearch(e.target.value)}
           maxLength={SEARCH_MAX}
           className="flex-1 bg-transparent text-[13px] text-ink placeholder:text-ink-3 outline-none"
         />
@@ -146,14 +183,14 @@ export const AreasList = ({ imageByAreaId }: AreasListProps) => {
 
       {/* filter chips */}
       <div className="flex gap-2 overflow-x-auto no-scrollbar">
-        {FILTERS.map(f => (
+        {FILTERS.map((f) => (
           <button
             key={f}
             onClick={() => setActiveFilter(f)}
             className={`shrink-0 text-[12px] rounded-full border px-3 py-1 ${
               activeFilter === f
-                ? 'bg-ink text-paper border-ink'
-                : 'border-ink/25 text-ink-2 bg-paper'
+                ? "bg-ink text-paper border-ink"
+                : "border-ink/25 text-ink-2 bg-paper"
             }`}
           >
             {f}
@@ -169,13 +206,18 @@ export const AreasList = ({ imageByAreaId }: AreasListProps) => {
             <select
               aria-label="Sort crags"
               value={sortBy}
-              onChange={e => handleSortChange(e.target.value)}
-              className="appearance-none text-[11px] text-ink-3 bg-transparent pr-4"
+              onChange={(e) => handleSortChange(e.target.value)}
+              className="block appearance-none text-[11px] text-ink-3 bg-transparent pr-4"
             >
               <option value="name">sort: name</option>
               <option value="distance">sort: distance</option>
             </select>
-            <span aria-hidden className="pointer-events-none absolute right-0 top-1/2 -translate-y-1/2 text-[9px] text-ink-3">▾</span>
+            <span
+              aria-hidden
+              className="pointer-events-none absolute right-0 top-1/2 -translate-y-1/2 text-[9px] text-ink-3"
+            >
+              ▾
+            </span>
           </div>
         </div>
       )}
@@ -193,11 +235,14 @@ export const AreasList = ({ imageByAreaId }: AreasListProps) => {
       <div className="grid grid-cols-2 gap-3">
         {isLoading
           ? Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)
-          : sorted.map(area => (
-              <CragCard key={area.id} area={area} imageUrl={imageByAreaId?.get(area.id)} />
-            ))
-        }
+          : sorted.map((area) => (
+              <CragCard
+                key={area.id}
+                area={area}
+                imageUrl={imageByAreaId?.get(area.id)}
+              />
+            ))}
       </div>
     </div>
-  )
-}
+  );
+};

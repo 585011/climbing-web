@@ -5,6 +5,9 @@ import { useArea } from '../../features/areas/hooks/useArea'
 import { useRoutesByWall } from '../../features/routes/hooks/useRoutesByWall'
 import { useCurrentUser } from '../../features/users/hooks/useCurrentUser'
 import { useCreateGymTick } from '../../features/ticks/hooks/useCreateGymTick'
+import { useUploadTickPhoto } from '../../features/ticks/hooks/useUploadTickPhoto'
+import { TickPhotoPicker } from '../../features/ticks/components/TickPhotoPicker'
+import type { TickPhoto } from '../../features/ticks/components/TickPhotoPicker'
 import { TICK_STYLES } from '../../features/ticks/utils/tickStyles'
 import { HoldColorChip } from '../../components/ui/HoldColorChip'
 import { HOLD_COLORS } from '../../utils/holdColors'
@@ -47,15 +50,22 @@ function NewGymTickPage() {
   const [style, setStyle] = useState('')
   const [rating, setRating] = useState(0)
   const [note, setNote] = useState('')
+  const [photo, setPhoto] = useState<TickPhoto | null>(null)
+  // Set once the route + tick exist, so retrying a failed photo upload never
+  // creates the route a second time.
+  const [savedTickId, setSavedTickId] = useState<number | null>(null)
 
-  const { mutate: createGymTick, isPending, isError } = useCreateGymTick()
+  const { mutate: createGymTick, isPending: isCreating, isError } = useCreateGymTick()
+  const { mutate: uploadPhoto, isPending: isUploading, isError: photoFailed } = useUploadTickPhoto()
+  const isPending = isCreating || isUploading
 
   const newRoute = { wallId: wallIdNum, grade, style: discipline, holdColor, name }
   const routeValid = NewGymRouteInputSchema.safeParse(newRoute).success
-  const canSave = routeValid && style.length > 0 && userId > 0
+  const canSave = savedTickId !== null || (routeValid && style.length > 0 && userId > 0)
 
   // "Picker first": warn when an active route on this wall already looks like the one being added.
-  const lookalikes = grade.trim()
+  // Skipped once saved — the refetched list then contains the route we just created.
+  const lookalikes = grade.trim() && savedTickId === null
     ? routes.filter(r => sameText(r.grade, grade) && (!holdColor || sameText(r.holdColor, holdColor)))
     : []
 
@@ -65,7 +75,13 @@ function NewGymTickPage() {
   if (area && area.type !== 'gym')
     return <p className="p-4 text-ink-2">New routes can only be added in climbing gyms.</p>
 
+  const finish = (tickId: number) => {
+    if (!photo) return backToWall()
+    uploadPhoto({ userId, tickId, photo: photo.file }, { onSuccess: backToWall })
+  }
+
   const handleSave = () => {
+    if (savedTickId !== null) return finish(savedTickId)
     if (!canSave || !discipline) return
     createGymTick(
       {
@@ -75,9 +91,16 @@ function NewGymTickPage() {
         rating: rating > 0 ? rating : undefined,
         personalNote: note.trim() || undefined,
       },
-      { onSuccess: backToWall }
+      {
+        onSuccess: tick => {
+          setSavedTickId(tick.id)
+          finish(tick.id)
+        },
+      }
     )
   }
+
+  const saveLabel = savedTickId === null ? 'add route & save tick ✓' : photo ? 'retry photo upload' : 'done'
 
   return (
     <div className="flex flex-col min-h-full">
@@ -232,15 +255,21 @@ function NewGymTickPage() {
         />
       </div>
 
+      {/* Photo */}
+      <TickPhotoPicker value={photo} onChange={setPhoto} />
+
       {/* Save */}
       <div className="px-4 pb-4">
         {isError && <p className="text-center text-[12px] text-accent mb-2">Couldn't save — try again</p>}
+        {photoFailed && (
+          <p className="text-center text-[12px] text-accent mb-2">Tick saved, but the photo didn’t upload — try again</p>
+        )}
         <button
           onClick={handleSave}
           disabled={isPending || !canSave}
           className="w-full py-3.5 rounded-full bg-ink text-paper shadow-lg text-[14px] font-semibold disabled:opacity-50"
         >
-          {isPending ? 'Saving…' : 'add route & save tick ✓'}
+          {isPending ? 'Saving…' : saveLabel}
         </button>
         {!canSave && (
           <p className="text-center text-[12px] text-ink-3 mt-2">Grade, type and how you sent it are required</p>

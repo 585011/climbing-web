@@ -119,7 +119,7 @@ export const TicksAllList = ({ ticks, isLoading, isError, onRetry }: TicksAllLis
                 aria-label="Sort ticks"
                 value={sortBy}
                 onChange={e => setSortBy(e.target.value as SortBy)}
-                className="appearance-none text-[11px] text-ink-3 bg-transparent pr-4"
+                className="block appearance-none text-[11px] text-ink-3 bg-transparent pr-4"
               >
                 <option value="date">date</option>
                 <option value="grade">grade</option>

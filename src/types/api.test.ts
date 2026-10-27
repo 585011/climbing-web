@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { ClimbingAreaSchema, ClimbingRouteSchema, NewGymRouteInputSchema, PERSONAL_NOTE_MAX, TickInputSchema, WallSchema, WALL_IMAGE_MAX_BYTES, WALL_IMAGE_TYPES } from './api'
+import { ClimbingAreaSchema, ClimbingRouteSchema, NewGymRouteInputSchema, PERSONAL_NOTE_MAX, TickInputSchema, UserRouteTickSchema, WallSchema, WALL_IMAGE_MAX_BYTES, WALL_IMAGE_TYPES } from './api'
 
 describe('TickInputSchema', () => {
   it('accepts a note exactly at the max length', () => {
@@ -103,5 +103,20 @@ describe('NewGymRouteInputSchema', () => {
 
   it('accepts Norwegian letters in hold colours', () => {
     expect(NewGymRouteInputSchema.safeParse({ wallId: 5, grade: '6B', style: 'boulder', holdColor: 'grønn' }).success).toBe(true)
+  })
+})
+
+describe('UserRouteTickSchema photoUrl', () => {
+  const baseTick = {
+    id: 1, userId: 7, routeId: 42, tickedAt: '2026-10-01T00:00:00Z', style: 'flash', rating: null, personalNote: null,
+  }
+
+  it('defaults to null for pre-photo API responses', () => {
+    expect(UserRouteTickSchema.parse(baseTick).photoUrl).toBeNull()
+  })
+
+  it('parses a presigned photo URL', () => {
+    const parsed = UserRouteTickSchema.parse({ ...baseTick, photoUrl: 'https://r2.example/tick.jpg?sig=x' })
+    expect(parsed.photoUrl).toBe('https://r2.example/tick.jpg?sig=x')
   })
 })

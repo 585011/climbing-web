@@ -8,7 +8,8 @@
 	# Security headers, ported from nginx.conf. CSP notes: style-src
 	# 'unsafe-inline' is required for React inline style props
 	# (react-zoom-pan-pinch); img-src https: covers the R2 presigned image
-	# URLs; connect-src is pinned to the API origin ({$API_ORIGIN}, the
+	# URLs, and blob: lets tick photos be decoded for compression and
+	# previewed before upload (TickPhotoPicker); connect-src is pinned to the API origin ({$API_ORIGIN}, the
 	# Railway backend — 'self' no longer covers it now the API is a separate
 	# service), Auth0 (https://*.auth0.com, covering the token endpoint used
 	# by refresh tokens) and the OpenFreeMap tile host
@@ -19,7 +20,7 @@
 	# and no 'unsafe-eval'/'wasm-unsafe-eval' needed (Firefox/Safari block the
 	# default build's runtime blob worker as an eval).
 	header {
-		Content-Security-Policy "default-src 'self'; script-src 'self'; worker-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' https: data:; connect-src 'self' {$API_ORIGIN:https://climbing-api-production.up.railway.app} https://*.auth0.com https://tiles.openfreemap.org; frame-src https://*.auth0.com; frame-ancestors 'none'; base-uri 'self'; object-src 'none'"
+		Content-Security-Policy "default-src 'self'; script-src 'self'; worker-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' https: data: blob:; connect-src 'self' {$API_ORIGIN:https://climbing-api-production.up.railway.app} https://*.auth0.com https://tiles.openfreemap.org; frame-src https://*.auth0.com; frame-ancestors 'none'; base-uri 'self'; object-src 'none'"
 		X-Content-Type-Options "nosniff"
 		X-Frame-Options "DENY"
 		Referrer-Policy "strict-origin-when-cross-origin"

@@ -7,8 +7,12 @@ import { useCurrentUser } from '../../features/users/hooks/useCurrentUser'
 import { useTicksByUser } from '../../features/ticks/hooks/useTicksByUser'
 import { useCreateTick } from '../../features/ticks/hooks/useCreateTick'
 import { useUpdateTick } from '../../features/ticks/hooks/useUpdateTick'
+import { useUploadTickPhoto } from '../../features/ticks/hooks/useUploadTickPhoto'
+import { TickPhotoPicker } from '../../features/ticks/components/TickPhotoPicker'
+import type { TickPhoto } from '../../features/ticks/components/TickPhotoPicker'
 import { TICK_STYLES as STYLES } from '../../features/ticks/utils/tickStyles'
 import { PERSONAL_NOTE_MAX } from '../../types/api'
+import type { UserRouteTick } from '../../types/api'
 import { routeDisplayName } from '../../utils/routeDisplayName'
 
 export const Route = createFileRoute('/areas/$areaId/walls/$wallId/routes/$routeId_/tick')({
@@ -33,6 +37,8 @@ function LogTickPage() {
   const [style, setStyle] = useState('')
   const [rating, setRating] = useState(0)
   const [note, setNote] = useState('')
+  const [photo, setPhoto] = useState<TickPhoto | null>(null)
+  const isGym = area?.type === 'gym'
 
   // The ticks query resolves after first render, so an existing tick can
   // appear (or change id) mid-session. Sync the form to it during render —
@@ -47,7 +53,8 @@ function LogTickPage() {
 
   const { mutate: createTick, isPending: isCreating } = useCreateTick()
   const { mutate: updateTick, isPending: isUpdating } = useUpdateTick()
-  const isPending = isCreating || isUpdating
+  const { mutate: uploadPhoto, isPending: isUploading, isError: photoFailed } = useUploadTickPhoto()
+  const isPending = isCreating || isUpdating || isUploading
 
   // A tick records how the route was sent, so a style is required; rating and
   // note stay optional. This gates the Save buttons against empty submissions.
@@ -63,6 +70,16 @@ function LogTickPage() {
     route?.style || null,
   ].filter(Boolean)
 
+  const backToRoute = () =>
+    navigate({ to: '/areas/$areaId/walls/$wallId/routes/$routeId', params: { areaId, wallId, routeId } })
+
+  // The photo uploads once the tick exists. If that fails the tick is already
+  // saved, so the ticks refetch flips the form to edit mode and a retry updates.
+  const afterSave = (tick: UserRouteTick) => {
+    if (!photo) return backToRoute()
+    uploadPhoto({ userId, tickId: tick.id, photo: photo.file }, { onSuccess: backToRoute })
+  }
+
   const handleSave = () => {
     if (!route || !userId || !canSave) return
     const data = {
@@ -71,15 +88,9 @@ function LogTickPage() {
       personalNote: note.trim() || undefined,
     }
     if (existingTick) {
-      updateTick(
-        { userId, tickId: existingTick.id, ...data },
-        { onSuccess: () => navigate({ to: '/areas/$areaId/walls/$wallId/routes/$routeId', params: { areaId, wallId, routeId } }) }
-      )
+      updateTick({ userId, tickId: existingTick.id, ...data }, { onSuccess: afterSave })
     } else {
-      createTick(
-        { userId, routeId: route.id, ...data },
-        { onSuccess: () => navigate({ to: '/areas/$areaId/walls/$wallId/routes/$routeId', params: { areaId, wallId, routeId } }) }
-      )
+      createTick({ userId, routeId: route.id, ...data }, { onSuccess: afterSave })
     }
   }
 
@@ -202,8 +213,16 @@ function LogTickPage() {
         </p>
       </div>
 
+      {/* Photo — gym routes get reset, so only gym ticks take one */}
+      {isGym && (
+        <TickPhotoPicker value={photo} onChange={setPhoto} currentUrl={existingTick?.photoUrl} />
+      )}
+
       {/* Floating save button */}
       <div className="px-4 pb-4">
+        {photoFailed && (
+          <p className="text-center text-[12px] text-accent mb-2">Tick saved, but the photo didn’t upload — tap save to retry</p>
+        )}
         <button
           onClick={handleSave}
           disabled={isPending || !canSave}

@@ -6,6 +6,7 @@ import { useArea } from '../../features/areas/hooks/useArea'
 import { useTicksByUser } from '../../features/ticks/hooks/useTicksByUser'
 import { useCurrentUser } from '../../features/users/hooks/useCurrentUser'
 import { useRetireRoute } from '../../features/routes/hooks/useRetireRoute'
+import { WallImageViewer } from '../../features/walls/components/WallImageViewer'
 import { useIsAdmin } from '../../hooks/useIsAdmin'
 import { HoldColorChip } from '../../components/ui/HoldColorChip'
 import { routeDisplayName } from '../../utils/routeDisplayName'
@@ -30,6 +31,7 @@ function RoutePage() {
   const isAdmin = useIsAdmin()
   const { mutate: setRetired, isPending: isRetiring } = useRetireRoute()
   const [confirmRetire, setConfirmRetire] = useState(false)
+  const [photoOpen, setPhotoOpen] = useState(false)
 
   if (Number.isNaN(areaIdNum) || Number.isNaN(wallIdNum) || Number.isNaN(routeIdNum))
     return <p className="p-4 text-ink-2">Invalid URL</p>
@@ -117,10 +119,27 @@ function RoutePage() {
         </div>
       )}
 
-      {/* Topo photo placeholder */}
-      <div className="mx-4 mb-3 h-48 bg-paper-2 rounded-xl flex items-center justify-center text-ink-3 text-sm">
-        topo photo
-      </div>
+      {/* Topo photo — your tick's photo when you have one (gym ticks), else a placeholder */}
+      {tick?.photoUrl ? (
+        <button
+          onClick={() => setPhotoOpen(true)}
+          aria-label="View tick photo fullscreen"
+          className="mx-4 mb-3 h-48 bg-paper-2 rounded-xl overflow-hidden"
+        >
+          <img src={tick.photoUrl} alt="Your photo of this route" className="w-full h-full object-cover" />
+        </button>
+      ) : (
+        <div className="mx-4 mb-3 h-48 bg-paper-2 rounded-xl flex items-center justify-center text-ink-3 text-sm">
+          topo photo
+        </div>
+      )}
+      {photoOpen && tick?.photoUrl && (
+        <WallImageViewer
+          src={tick.photoUrl}
+          alt="Your photo of this route"
+          onClose={() => setPhotoOpen(false)}
+        />
+      )}
 
       {/* Description */}
       <div className="px-4 mb-3">
