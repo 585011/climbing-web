@@ -170,7 +170,7 @@ export const AreasList = ({ imageByAreaId }: AreasListProps) => {
               aria-label="Sort crags"
               value={sortBy}
               onChange={e => handleSortChange(e.target.value)}
-              className="appearance-none text-[11px] text-ink-3 bg-transparent pr-4"
+              className="block appearance-none text-[11px] text-ink-3 bg-transparent pr-4"
             >
               <option value="name">sort: name</option>
               <option value="distance">sort: distance</option>
