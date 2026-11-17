@@ -93,12 +93,12 @@ Detail pages (not tabs):
 | Area (Crag) | `/areas/:areaId` | Implemented — hero, info, tabs (Walls/Routes/Approach/Info); opens on Walls, except when there's ≤ 1 wall: then the Walls tab is hidden and it opens on Routes; Approach tab shows per-wall `approachInfo` |
 | Wall | `/areas/:areaId/walls/:wallId` | Implemented — hero, route list |
 | Route | `/areas/:areaId/walls/:wallId/routes/:routeId` | Shell — breadcrumb, grade, meta, topo placeholder, description, tick section |
-| Log a tick | `/areas/:areaId/walls/:wallId/routes/:routeId/tick` | Implemented — style picker, star rating, personal note; handles create + edit |
+| Log a tick | `/areas/:areaId/walls/:wallId/routes/:routeId/tick` | Implemented — style picker, star rating, personal note, optional photo (gym routes only); handles create + edit |
 | Add & tick gym route | `/areas/:areaId/walls/:wallId/new-tick` | Implemented — gym walls only; grade, type, hold colour, optional name + tick fields; warns about look-alike routes on the wall; one request (`newRoute` on the tick) |
 
 ## Climbing gyms
 
-Areas have `type: 'crag' | 'gym'` (gym badge, square map pin, Crag/Gym filters on Explore, Map and All ticks). In gyms, climbers add routes themselves while ticking and any climber can mark a route **retired** when it's taken down (restoring is admin-only). Retired routes drop out of wall/area route lists but ticks keep them — tick history fetches `/routes?includeRetired=true` so they still resolve. Unnamed gym routes display as "<Colour> route" via `utils/routeDisplayName.ts`.
+Areas have `type: 'crag' | 'gym'` (gym badge, square map pin, Crag/Gym filters on Explore, Map and All ticks). In gyms, climbers add routes themselves while ticking and any climber can mark a route **retired** when it's taken down (restoring is admin-only). Retired routes drop out of wall/area route lists but ticks keep them — tick history fetches `/routes?includeRetired=true` so they still resolve. Unnamed gym routes display as "<Colour> route" via `utils/routeDisplayName.ts`. Gym ticks can carry a **personal photo**. Only the climber sees it (tick endpoints are owner-only). Routes themselves have no photo. The photo is a separate `PUT /users/:id/ticks/:tickId/photo` request (multipart field `image`, JPEG/PNG/WebP ≤ 5 MB; the backend has no delete endpoint, only replace) that `useUploadTickPhoto` sends right after the tick saves. If it fails, the tick is still saved and a toast says so. `TickPhotoField` downscales the picked photo on the phone to a ≤ 2048px JPEG first (`utils/tickPhoto.ts`).
 
 ## Design system
 
@@ -158,7 +158,7 @@ return z.array(WallSchema).parse(raw)
 | `useWallsByArea(areaId)` | `['areas', areaId, 'walls']` |
 | `useRoutesByWall(wallId)` | `['walls', wallId, 'routes']` |
 | `useRoute(id)` | `['routes', id]` |
-| `useTicksByUser(userId)` | `['users', userId, 'ticks']` (disabled until `userId > 0`, so pass `currentUser?.id ?? 0` as-is) |
+| `useTicksByUser(userId)` | `['users', userId, 'ticks']` (disabled until `userId > 0`, so pass `currentUser?.id ?? 0` as-is; `staleTime` 10 min so the 15-min presigned `photoUrl`s stay stable) |
 | `useCurrentUser()` | `['users', 'me']` |
 
 **URL param parsing:** TanStack Router provides URL params as strings. Always parse with `Number()` and guard with `Number.isNaN()` before passing to queries:

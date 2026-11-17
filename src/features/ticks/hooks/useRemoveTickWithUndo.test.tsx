@@ -18,7 +18,7 @@ import { useTicksByUser } from './useTicksByUser'
 import { clearTickPendingRemoval } from '../utils/pendingTickRemovals'
 
 const tick: UserRouteTick = {
-  id: 9, userId: 1, routeId: 42, tickedAt: '2026-05-12T10:00:00Z', style: 'flash', rating: 4, personalNote: '',
+  id: 9, userId: 1, routeId: 42, tickedAt: '2026-05-12T10:00:00Z', style: 'flash', rating: 4, personalNote: '', photoUrl: null,
 }
 const other: UserRouteTick = { ...tick, id: 10, routeId: 43 }
 

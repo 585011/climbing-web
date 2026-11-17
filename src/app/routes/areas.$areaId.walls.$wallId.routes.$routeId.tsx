@@ -9,6 +9,7 @@ import { useRetireRoute } from '../../features/routes/hooks/useRetireRoute'
 import { useIsAdmin } from '../../hooks/useIsAdmin'
 import { HoldColorChip } from '../../components/ui/HoldColorChip'
 import { routeDisplayName } from '../../utils/routeDisplayName'
+import { WallImageViewer } from '../../features/walls/components/WallImageViewer'
 
 export const Route = createFileRoute('/areas/$areaId/walls/$wallId/routes/$routeId')({
   component: RoutePage,
@@ -30,6 +31,7 @@ function RoutePage() {
   const isAdmin = useIsAdmin()
   const { mutate: setRetired, isPending: isRetiring } = useRetireRoute()
   const [confirmRetire, setConfirmRetire] = useState(false)
+  const [photoOpen, setPhotoOpen] = useState(false)
 
   if (Number.isNaN(areaIdNum) || Number.isNaN(wallIdNum) || Number.isNaN(routeIdNum))
     return <p className="p-4 text-ink-2">Invalid URL</p>
@@ -170,7 +172,30 @@ function RoutePage() {
               {tick.personalNote && (
                 <p className="text-[13px] text-ink-2 italic">"{tick.personalNote}"</p>
               )}
+              {tick.photoUrl && (
+                <button
+                  type="button"
+                  onClick={() => setPhotoOpen(true)}
+                  aria-label="View your photo fullscreen"
+                  className="block w-full mt-2"
+                >
+                  <img
+                    src={tick.photoUrl}
+                    alt=""
+                    loading="lazy"
+                    decoding="async"
+                    className="w-full max-h-64 object-cover rounded-lg"
+                  />
+                </button>
+              )}
             </div>
+            {photoOpen && tick.photoUrl && (
+              <WallImageViewer
+                src={tick.photoUrl}
+                alt={`Your photo of ${route ? routeDisplayName(route) : 'this route'}`}
+                onClose={() => setPhotoOpen(false)}
+              />
+            )}
           </>
         ) : (
           <p className="text-[13px] text-ink-3 leading-relaxed">

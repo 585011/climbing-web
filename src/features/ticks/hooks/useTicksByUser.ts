@@ -20,5 +20,9 @@ export const useTicksByUser = (userId: number) => {
     queryFn: () => getTicksByUser(userId),
     select,
     enabled: userId > 0,
+    // Gym tick photos are short-lived (15-min) presigned URLs. Refetching on every
+    // mount would mint new URLs and re-download each photo; 10 min keeps them
+    // stable within the presign window. Tick writes invalidate this query anyway.
+    staleTime: 10 * 60 * 1000,
   })
 }
