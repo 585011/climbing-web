@@ -18,6 +18,15 @@ docker run -p 8000:80 climbing-web   # Run (Caddy, plain HTTP; set -e DOMAIN=<ho
 
 Tests use **Vitest** + **@testing-library/react** (jsdom). Setup is `src/testing/setup.ts`; config lives in the `test` block of `vite.config.ts`. Co-locate `*.test.ts(x)` next to the code under test — the TanStack Router plugin ignores them via `routeFileIgnorePattern: '\\.test\\.'`, so test files in the routes dir never enter `routeTree.gen.ts`. jsdom lacks `HTMLDialogElement.showModal()`/`close()`; `setup.ts` stubs them (`close()` fires the `close` event). jsdom also hides `[popover]` without offering `showPopover()`, so `setup.ts` forces `[popover]` visible — tests run the no-popover-support fallback path.
 
+## Deployment
+
+Production runs on **Railway**. Railway watches `main` and rebuilds the `Dockerfile` (Vite build → Caddy image) on every push, so **merging a PR to `main` is the deploy**. This repo has no deploy job. `.github/workflows/ci.yml` only runs lint → test → build on PRs and pushes to `main`, and Railway builds independently of it, so a red CI run doesn't block a deploy by itself. Don't merge on red.
+
+- **Config lives in the Railway dashboard, not the repo.** The `VITE_API_URL` / `VITE_AUTH0_*` build variables are baked into the bundle at build time, so changing one needs a rebuild. The runtime `API_ORIGIN` sets the CSP `connect-src` in the `Caddyfile` (default `https://climbing-api-production.up.railway.app`).
+- **The API is a separate Railway service** built from [climbing-api](https://github.com/585011/climbing-api). The SPA calls it cross-origin via `VITE_API_URL`.
+- **To preview a branch before merging**, enable Railway *PR Environments*. Each preview environment needs the `VITE_*` variables, its `*.up.railway.app` URL added to the Auth0 app's callback, logout and web-origin URLs, and an API that allows that origin (CORS).
+- The Hetzner + GHCR + SSH design in `docs/superpowers/*/2026-07-04-production-deployment*` was replaced by Railway on 2026-07-07 (commit `eee1b87`). Treat it as history.
+
 ## Stack
 
 React 19 + TypeScript 6 + Vite 8 + Tailwind CSS v4, using `@vitejs/plugin-react` (Oxc-based transformer) and `@tailwindcss/vite`. Entry point is `src/main.tsx`; root component is `src/app/index.tsx`.
@@ -81,7 +90,7 @@ Detail pages (not tabs):
 
 | Page | Route | State |
 |---|---|---|
-| Area (Crag) | `/areas/:areaId` | Implemented — hero, info, tabs (Routes/Walls/Approach/Info); Walls tab hidden when ≤ 1 wall; Approach tab shows per-wall `approachInfo` |
+| Area (Crag) | `/areas/:areaId` | Implemented — hero, info, tabs (Walls/Routes/Approach/Info); opens on Walls, except when there's ≤ 1 wall: then the Walls tab is hidden and it opens on Routes; Approach tab shows per-wall `approachInfo` |
 | Wall | `/areas/:areaId/walls/:wallId` | Implemented — hero, route list |
 | Route | `/areas/:areaId/walls/:wallId/routes/:routeId` | Shell — breadcrumb, grade, meta, topo placeholder, description, tick section |
 | Log a tick | `/areas/:areaId/walls/:wallId/routes/:routeId/tick` | Implemented — style picker, star rating, personal note; handles create + edit |

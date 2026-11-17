@@ -45,6 +45,10 @@ Run on port 8000:
 docker run -p 8000:80 climbing-web
 ```
 
+## Deployment
+
+Production is hosted on [Railway](https://railway.com), which rebuilds the `Dockerfile` and deploys on every push to `main`. Merging a PR is the deploy. GitHub Actions (`.github/workflows/ci.yml`) runs lint, tests and the build on every PR and push to `main`. See the Deployment section of `CLAUDE.md` for configuration and branch previews.
+
 ## Security
 
 User input is length-limited on the client and rendered via React's default JSX escaping (no `dangerouslySetInnerHTML`), which mitigates XSS. Client-side validation is UX / defense-in-depth only — the backend is the authoritative validator and enforces the same limits.

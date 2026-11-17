@@ -75,6 +75,23 @@ describe('AreaPage hero', () => {
     h.walls = [wall(1), wall(2)]
     renderPage()
     expect(screen.queryByTestId('wall-photo')).not.toBeInTheDocument()
-    expect(screen.getByText('photo')).toBeInTheDocument()
+    // The hero is the placeholder block holding the region chip.
+    expect(screen.getByText('Bergen nord').parentElement).toHaveTextContent('photo')
+  })
+})
+
+describe('AreaPage default tab', () => {
+  it('opens on Walls when the area has more than one wall', () => {
+    h.walls = [wall(1), wall(2)]
+    renderPage()
+    expect(screen.getByRole('tab', { name: 'Walls' })).toHaveAttribute('aria-selected', 'true')
+    expect(screen.getByRole('tabpanel', { name: 'Walls' })).toHaveTextContent('Wall 1')
+  })
+
+  it('opens on Routes when the area has a single wall (no Walls tab)', () => {
+    h.walls = [wall(12)]
+    renderPage()
+    expect(screen.queryByRole('tab', { name: 'Walls' })).not.toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: 'Routes' })).toHaveAttribute('aria-selected', 'true')
   })
 })

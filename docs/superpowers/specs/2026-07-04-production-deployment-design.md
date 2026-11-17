@@ -1,8 +1,10 @@
 # Production Deployment — Hetzner VM + Caddy + CD
 
+> **Superseded (2026-07-07):** production moved to Railway, which auto-builds the `Dockerfile` on every push to `main`. The Hetzner VM, GHCR images and SSH deploy workflow described here were dropped in commit `eee1b87`. Kept for history; see the Deployment section of `CLAUDE.md` for the current setup.
+
 **Date:** 2026-07-04
 **Scope issues:** [climbing-api#39](https://github.com/585011/climbing-api/issues/39), [climbing-web#22](https://github.com/585011/climbing-web/issues/22)
-**Status:** Approved design
+**Status:** Superseded by Railway (2026-07-07)
 
 ## Goal
 
