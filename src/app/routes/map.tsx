@@ -13,7 +13,7 @@ export const Route = createFileRoute('/map')({
 })
 
 const MapSkeleton = () => (
-  <div className="mx-4 mt-4 h-[60vh] rounded-xl bg-paper-2 animate-pulse" />
+  <div className="mx-4 mt-4 h-[60dvh] rounded-xl bg-paper-2 animate-pulse" />
 )
 
 type AreaTypeFilter = '' | 'crag' | 'gym'
@@ -52,6 +52,7 @@ function MapPage() {
           <button
             key={c.value}
             onClick={() => changeType(c.value)}
+            aria-pressed={areaType === c.value}
             className={`shrink-0 text-[12px] rounded-full border px-3 py-1 ${
               areaType === c.value ? 'bg-ink text-paper border-ink' : 'border-ink/25 text-ink-2 bg-paper'
             }`}
@@ -61,7 +62,7 @@ function MapPage() {
         ))}
       </div>
       <div className="px-4 pt-3">
-        <Suspense fallback={<div className="h-[60vh] rounded-xl bg-paper-2 animate-pulse" />}>
+        <Suspense fallback={<div className="h-[60dvh] rounded-xl bg-paper-2 animate-pulse" />}>
           {/* MapView builds its markers once on mount, so remount it when the filter changes. */}
           <MapView key={areaType} areas={areas} selectedId={selectedId} onSelect={setSelectedId} />
         </Suspense>

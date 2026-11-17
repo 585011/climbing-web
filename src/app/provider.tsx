@@ -1,6 +1,6 @@
 import { useEffect, type ReactNode } from 'react'
 import { Auth0Provider, useAuth0 } from '@auth0/auth0-react'
-import { apiClient, configureAuth } from '../lib/api-client'
+import { ApiError, apiClient, configureAuth } from '../lib/api-client'
 
 type AppProviderProps = {
   children: ReactNode
@@ -10,7 +10,7 @@ async function syncBackendUser(displayName: string, email: string) {
   try {
     await apiClient.get('/users/me')
   } catch (e) {
-    if (e instanceof Error && e.message.startsWith('404 ')) {
+    if (e instanceof ApiError && e.status === 404) {
       try {
         await apiClient.post('/users/me', { displayName, email })
       } catch (postErr) {

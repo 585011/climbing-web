@@ -7,6 +7,8 @@ import { useCurrentUser } from '../../features/users/hooks/useCurrentUser'
 import { useTicksByUser } from '../../features/ticks/hooks/useTicksByUser'
 import { useCreateTick } from '../../features/ticks/hooks/useCreateTick'
 import { useUpdateTick } from '../../features/ticks/hooks/useUpdateTick'
+import { useUploadTickPhoto } from '../../features/ticks/hooks/useUploadTickPhoto'
+import { TickPhotoField } from '../../features/ticks/components/TickPhotoField'
 import { TICK_STYLES as STYLES } from '../../features/ticks/utils/tickStyles'
 import { PERSONAL_NOTE_MAX } from '../../types/api'
 import { routeDisplayName } from '../../utils/routeDisplayName'
@@ -27,7 +29,7 @@ function LogTickPage() {
   const { data: route, isLoading: routeLoading, isError } = useRoute(routeIdNum)
   const { data: currentUser } = useCurrentUser()
   const userId = currentUser?.id ?? 0
-  const { data: ticksMap = new Map() } = useTicksByUser(userId, { enabled: userId > 0 })
+  const { data: ticksMap = new Map() } = useTicksByUser(userId)
   const existingTick = route ? (ticksMap.get(route.id) ?? null) : null
 
   const [style, setStyle] = useState('')
@@ -47,7 +49,13 @@ function LogTickPage() {
 
   const { mutate: createTick, isPending: isCreating } = useCreateTick()
   const { mutate: updateTick, isPending: isUpdating } = useUpdateTick()
-  const isPending = isCreating || isUpdating
+  const { attachPhoto, isUploading } = useUploadTickPhoto()
+  const isPending = isCreating || isUpdating || isUploading
+
+  // Gym ticks only: an optional photo, uploaded right after the tick is saved.
+  const isGym = area?.type === 'gym'
+  const [photo, setPhoto] = useState<File | null>(null)
+  const [preparingPhoto, setPreparingPhoto] = useState(false)
 
   // A tick records how the route was sent, so a style is required; rating and
   // note stay optional. This gates the Save buttons against empty submissions.
@@ -64,7 +72,10 @@ function LogTickPage() {
   ].filter(Boolean)
 
   const handleSave = () => {
-    if (!route || !userId || !canSave) return
+    if (!route || !userId || !canSave || preparingPhoto) return
+    const goToRoute = () =>
+      navigate({ to: '/areas/$areaId/walls/$wallId/routes/$routeId', params: { areaId, wallId, routeId } })
+    const onSaved = (saved: { id: number }) => attachPhoto(userId, saved.id, isGym ? photo : null, goToRoute)
     const data = {
       style: style || undefined,
       rating: rating > 0 ? rating : undefined,
@@ -73,12 +84,12 @@ function LogTickPage() {
     if (existingTick) {
       updateTick(
         { userId, tickId: existingTick.id, ...data },
-        { onSuccess: () => navigate({ to: '/areas/$areaId/walls/$wallId/routes/$routeId', params: { areaId, wallId, routeId } }) }
+        { onSuccess: onSaved }
       )
     } else {
       createTick(
         { userId, routeId: route.id, ...data },
-        { onSuccess: () => navigate({ to: '/areas/$areaId/walls/$wallId/routes/$routeId', params: { areaId, wallId, routeId } }) }
+        { onSuccess: onSaved }
       )
     }
   }
@@ -96,7 +107,7 @@ function LogTickPage() {
         <p className="text-[15px] font-semibold text-ink">log a tick</p>
         <button
           onClick={handleSave}
-          disabled={isPending || !canSave}
+          disabled={isPending || !canSave || preparingPhoto}
           className="bg-accent text-paper text-[12px] font-semibold px-3 py-1 rounded-full disabled:opacity-50"
         >
           save
@@ -140,13 +151,14 @@ function LogTickPage() {
             <button
               key={s.value}
               onClick={() => setStyle(style === s.value ? '' : s.value)}
+              aria-pressed={style === s.value}
               className={`flex items-center gap-3 w-full text-left rounded-xl border px-4 py-3 transition-colors ${
                 style === s.value
                   ? 'border-accent bg-accent/5'
                   : 'border-ink/15 bg-paper'
               }`}
             >
-              <span className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${
+              <span aria-hidden className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${
                 style === s.value ? 'border-accent' : 'border-ink/30'
               }`}>
                 {style === s.value && (
@@ -175,6 +187,8 @@ function LogTickPage() {
             <button
               key={star}
               onClick={() => setRating(star === rating ? 0 : star)}
+              aria-label={`${star} star`}
+              aria-pressed={star === rating}
               className={`text-[28px] leading-none ${star <= rating ? 'text-accent' : 'text-ink/20'}`}
             >
               ★
@@ -202,11 +216,25 @@ function LogTickPage() {
         </p>
       </div>
 
+      {isGym && (
+        <div className="px-4 mb-5">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-[15px] uppercase tracking-widest text-ink-3">Photo</p>
+            <p className="text-[15px] text-ink-3">optional · only you see it</p>
+          </div>
+          <TickPhotoField
+            existingUrl={existingTick?.photoUrl ?? null}
+            onChange={setPhoto}
+            onPreparingChange={setPreparingPhoto}
+          />
+        </div>
+      )}
+
       {/* Floating save button */}
       <div className="px-4 pb-4">
         <button
           onClick={handleSave}
-          disabled={isPending || !canSave}
+          disabled={isPending || !canSave || preparingPhoto}
           className="w-full py-3.5 rounded-full bg-ink text-paper shadow-lg text-[14px] font-semibold disabled:opacity-50"
         >
           {isPending ? 'Saving…' : 'save tick ✓'}

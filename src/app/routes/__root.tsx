@@ -1,13 +1,14 @@
 import { createRootRoute, Outlet } from '@tanstack/react-router'
 import { useAuth0 } from '@auth0/auth0-react'
 import { BottomNav } from '../../components/ui/BottomNav'
+import { ToastRegion } from '../../components/ui/ToastRegion'
 
 const RootComponent = () => {
   const { isLoading, isAuthenticated, error, loginWithRedirect, logout } = useAuth0()
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-paper flex items-center justify-center">
+      <div className="min-h-dvh bg-paper flex items-center justify-center">
         <p className="text-ink-3 text-sm">Loading…</p>
       </div>
     )
@@ -15,7 +16,7 @@ const RootComponent = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-paper flex flex-col items-center justify-center gap-6 px-8">
+      <div className="min-h-dvh bg-paper flex flex-col items-center justify-center gap-6 px-8">
         <p className="text-ink-2 text-sm text-center">
           Something went wrong. Please try again.
         </p>
@@ -38,7 +39,7 @@ const RootComponent = () => {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-paper flex flex-col items-center justify-center gap-6 px-8">
+      <div className="min-h-dvh bg-paper flex flex-col items-center justify-center gap-6 px-8">
         <h1 className="text-2xl font-bold text-ink tracking-tight">Climbing</h1>
         <p className="text-ink-2 text-sm text-center">
           Log in to track your climbs and explore crags.
@@ -60,10 +61,11 @@ const RootComponent = () => {
   }
 
   return (
-    <div className="min-h-screen bg-paper flex flex-col max-w-md mx-auto relative">
+    <div className="min-h-dvh bg-paper flex flex-col max-w-md mx-auto relative">
       <main className="flex-1 pb-20 overflow-y-auto">
         <Outlet />
       </main>
+      <ToastRegion />
       <BottomNav />
     </div>
   )

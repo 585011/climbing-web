@@ -71,7 +71,7 @@ export const AreasList = ({ imageByAreaId }: AreasListProps) => {
       (!areaType || a.type === areaType)
   )
 
-  const sorted = [...filtered].sort(
+  const sorted = filtered.toSorted(
     sortBy === 'distance' && position
       ? (a, b) => haversineKm(position, a) - haversineKm(position, b)
       : (a, b) => a.name.localeCompare(b.name)
@@ -133,10 +133,11 @@ export const AreasList = ({ imageByAreaId }: AreasListProps) => {
 
       {/* search */}
       <div className="flex items-center gap-2 border border-ink/20 rounded-xl px-3 py-2 bg-paper">
-        <span className="text-ink-3 text-sm">⌕</span>
+        <span aria-hidden className="text-ink-3 text-sm">⌕</span>
         <input
-          type="text"
-          placeholder="Search crags, routes…"
+          type="search"
+          aria-label="Search crags"
+          placeholder="Search crags"
           value={search}
           onChange={e => setSearch(e.target.value)}
           maxLength={SEARCH_MAX}
@@ -150,6 +151,7 @@ export const AreasList = ({ imageByAreaId }: AreasListProps) => {
           <button
             key={f}
             onClick={() => setActiveFilter(f)}
+            aria-pressed={activeFilter === f}
             className={`shrink-0 text-[12px] rounded-full border px-3 py-1 ${
               activeFilter === f
                 ? 'bg-ink text-paper border-ink'

@@ -1,9 +1,19 @@
 @import "tailwindcss";
 
 @utility no-scrollbar {
-  -ms-overflow-style: none;
   scrollbar-width: none;
+  /* Safari < 18.2 lacks scrollbar-width */
   &::-webkit-scrollbar { display: none; }
+}
+
+/* Keep scroll gestures in/over a modal <dialog> from scrolling the page behind it.
+   Progressive enhancement — showModal() already makes the page inert. */
+dialog:modal {
+  overscroll-behavior: contain;
+}
+dialog::backdrop {
+  overflow: hidden;
+  overscroll-behavior: contain;
 }
 
 @theme {

@@ -20,12 +20,15 @@ function AreaPage() {
   const childMatches = useChildMatches()
   const { areaId } = Route.useParams()
   const areaIdNum = Number(areaId)
-  const [activeTab, setActiveTab] = useState<AreaTab>('Routes')
+  // null until the user picks a tab, so the default can follow the walls once they load.
+  const [pickedTab, setPickedTab] = useState<AreaTab | null>(null)
   const { data: area, isLoading: areaLoading, isError: areaError } = useArea(areaIdNum)
   const { data: walls, isLoading: wallsLoading } = useWallsByArea(areaIdNum)
-  const visibleTabs = (walls?.length ?? 0) > 1
-    ? AREA_TABS
-    : AREA_TABS.filter(t => t !== 'Walls')
+  const hasWallsTab = (walls?.length ?? 0) > 1
+  const visibleTabs: readonly AreaTab[] = hasWallsTab ? AREA_TABS : AREA_TABS.filter(t => t !== 'Walls')
+  // Open on Walls when the area has a Walls tab (more than one wall), otherwise on Routes.
+  const activeTab: AreaTab =
+    pickedTab && visibleTabs.includes(pickedTab) ? pickedTab : hasWallsTab ? 'Walls' : 'Routes'
 
   if (childMatches.length > 0) return <Outlet />
   if (Number.isNaN(areaIdNum)) return <p className="p-4 text-ink-2">Invalid URL</p>
@@ -85,12 +88,12 @@ function AreaPage() {
       {areaLoading ? (
         <div className="h-10 mx-4 bg-paper-2 animate-pulse rounded" />
       ) : (
-        <TabBar tabs={visibleTabs} active={activeTab} onChange={setActiveTab} />
+        <TabBar tabs={visibleTabs} active={activeTab} onChange={setPickedTab} label="Area sections" />
       )}
 
       {/* Tab content */}
       {!areaLoading && (
-        <div className="flex-1">
+        <div className="flex-1" role="tabpanel" aria-label={activeTab}>
           {activeTab === 'Walls' && (
             <div className="flex flex-col gap-2 px-4 py-3">
               {wallsLoading

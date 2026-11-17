@@ -83,6 +83,7 @@ export function WallPhoto({ wall, children }: WallPhotoProps) {
         {upload.isPending && (
           <div className="absolute inset-0 bg-paper/60 flex items-center justify-center">
             <div
+              role="status"
               aria-label="Uploading"
               className="h-8 w-8 rounded-full border-2 border-accent border-t-transparent animate-spin"
             />

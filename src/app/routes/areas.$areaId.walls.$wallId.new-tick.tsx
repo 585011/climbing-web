@@ -5,6 +5,8 @@ import { useArea } from '../../features/areas/hooks/useArea'
 import { useRoutesByWall } from '../../features/routes/hooks/useRoutesByWall'
 import { useCurrentUser } from '../../features/users/hooks/useCurrentUser'
 import { useCreateGymTick } from '../../features/ticks/hooks/useCreateGymTick'
+import { useUploadTickPhoto } from '../../features/ticks/hooks/useUploadTickPhoto'
+import { TickPhotoField } from '../../features/ticks/components/TickPhotoField'
 import { TICK_STYLES } from '../../features/ticks/utils/tickStyles'
 import { HoldColorChip } from '../../components/ui/HoldColorChip'
 import { HOLD_COLORS } from '../../utils/holdColors'
@@ -48,7 +50,12 @@ function NewGymTickPage() {
   const [rating, setRating] = useState(0)
   const [note, setNote] = useState('')
 
-  const { mutate: createGymTick, isPending, isError } = useCreateGymTick()
+  const [photo, setPhoto] = useState<File | null>(null)
+  const [preparingPhoto, setPreparingPhoto] = useState(false)
+
+  const { mutate: createGymTick, isPending: isCreating, isError } = useCreateGymTick()
+  const { attachPhoto, isUploading } = useUploadTickPhoto()
+  const isPending = isCreating || isUploading
 
   const newRoute = { wallId: wallIdNum, grade, style: discipline, holdColor, name }
   const routeValid = NewGymRouteInputSchema.safeParse(newRoute).success
@@ -66,7 +73,7 @@ function NewGymTickPage() {
     return <p className="p-4 text-ink-2">New routes can only be added in climbing gyms.</p>
 
   const handleSave = () => {
-    if (!canSave || !discipline) return
+    if (!canSave || !discipline || preparingPhoto) return
     createGymTick(
       {
         userId,
@@ -75,7 +82,7 @@ function NewGymTickPage() {
         rating: rating > 0 ? rating : undefined,
         personalNote: note.trim() || undefined,
       },
-      { onSuccess: backToWall }
+      { onSuccess: saved => attachPhoto(userId, saved.id, photo, backToWall) }
     )
   }
 
@@ -113,7 +120,7 @@ function NewGymTickPage() {
         <p className="text-[15px] uppercase tracking-widest text-ink-3 mb-2">Type</p>
         <div className="flex gap-2 flex-wrap">
           {DISCIPLINES.map(d => (
-            <button key={d.value} onClick={() => setDiscipline(d.value)} className={chipClass(discipline === d.value)}>
+            <button key={d.value} onClick={() => setDiscipline(d.value)} aria-pressed={discipline === d.value} className={chipClass(discipline === d.value)}>
               {d.label}
             </button>
           ))}
@@ -193,7 +200,7 @@ function NewGymTickPage() {
         <p className="text-[15px] uppercase tracking-widest text-ink-3 mb-3">How did you send it?</p>
         <div className="flex gap-2 flex-wrap">
           {TICK_STYLES.map(s => (
-            <button key={s.value} onClick={() => setStyle(style === s.value ? '' : s.value)} className={chipClass(style === s.value)}>
+            <button key={s.value} onClick={() => setStyle(style === s.value ? '' : s.value)} aria-pressed={style === s.value} className={chipClass(style === s.value)}>
               {s.label}
             </button>
           ))}
@@ -209,6 +216,7 @@ function NewGymTickPage() {
               key={star}
               onClick={() => setRating(star === rating ? 0 : star)}
               aria-label={`${star} star`}
+              aria-pressed={star === rating}
               className={`text-[28px] leading-none ${star <= rating ? 'text-accent' : 'text-ink/20'}`}
             >
               ★
@@ -232,12 +240,21 @@ function NewGymTickPage() {
         />
       </div>
 
+      {/* Photo */}
+      <div className="px-4 mb-5">
+        <div className="flex items-center justify-between mb-2">
+          <p className="text-[15px] uppercase tracking-widest text-ink-3">Photo</p>
+          <p className="text-[15px] text-ink-3">optional · only you see it</p>
+        </div>
+        <TickPhotoField existingUrl={null} onChange={setPhoto} onPreparingChange={setPreparingPhoto} />
+      </div>
+
       {/* Save */}
       <div className="px-4 pb-4">
         {isError && <p className="text-center text-[12px] text-accent mb-2">Couldn't save — try again</p>}
         <button
           onClick={handleSave}
-          disabled={isPending || !canSave}
+          disabled={isPending || !canSave || preparingPhoto}
           className="w-full py-3.5 rounded-full bg-ink text-paper shadow-lg text-[14px] font-semibold disabled:opacity-50"
         >
           {isPending ? 'Saving…' : 'add route & save tick ✓'}

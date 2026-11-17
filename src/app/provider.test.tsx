@@ -3,12 +3,15 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 // vi.mock is hoisted above imports, so the spies it references must be created
 // with vi.hoisted (a plain outer const would be uninitialized when the mock runs).
-const { auth0ProviderProps, getAccessTokenSilently, loginWithRedirect, configureAuth } =
+const { auth0ProviderProps, getAccessTokenSilently, loginWithRedirect, configureAuth, apiGet, apiPost, authState } =
   vi.hoisted(() => ({
     auth0ProviderProps: vi.fn(),
     getAccessTokenSilently: vi.fn(),
     loginWithRedirect: vi.fn(),
     configureAuth: vi.fn(),
+    apiGet: vi.fn(),
+    apiPost: vi.fn(),
+    authState: { isAuthenticated: false, user: undefined as { name?: string; email?: string } | undefined },
   }))
 
 vi.mock('@auth0/auth0-react', () => ({
@@ -19,17 +22,18 @@ vi.mock('@auth0/auth0-react', () => ({
   useAuth0: () => ({
     getAccessTokenSilently,
     loginWithRedirect,
-    isAuthenticated: false,
-    user: undefined,
+    ...authState,
   }),
 }))
 
-vi.mock('../lib/api-client', () => ({
+vi.mock('../lib/api-client', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../lib/api-client')>()),
   configureAuth,
-  apiClient: { get: vi.fn(), post: vi.fn() },
+  apiClient: { get: apiGet, post: apiPost },
 }))
 
 import { AppProvider } from './provider'
+import { ApiError } from '../lib/api-client'
 
 /** Renders the provider and returns the token getter it handed to apiClient. */
 const renderAndGetTokenFn = () => {
@@ -45,6 +49,8 @@ beforeEach(() => {
   vi.clearAllMocks()
   // The real loginWithRedirect returns a promise; the caller attaches a handler to it.
   loginWithRedirect.mockResolvedValue(undefined)
+  authState.isAuthenticated = false
+  authState.user = undefined
 })
 
 describe('AppProvider Auth0 configuration', () => {
@@ -113,5 +119,37 @@ describe('token getter recovery', () => {
 
     await expect(renderAndGetTokenFn()()).resolves.toBe('jwt-token')
     expect(loginWithRedirect).not.toHaveBeenCalled()
+  })
+})
+
+describe('backend user sync', () => {
+  const renderSignedIn = () => {
+    authState.isAuthenticated = true
+    authState.user = { name: 'Ada', email: 'ada@example.com' }
+    render(
+      <AppProvider>
+        <div />
+      </AppProvider>
+    )
+  }
+
+  it('registers the user when the backend has no record (404)', async () => {
+    apiGet.mockRejectedValue(new ApiError(404, 'Not Found'))
+    apiPost.mockResolvedValue({})
+    renderSignedIn()
+
+    await vi.waitFor(() =>
+      expect(apiPost).toHaveBeenCalledWith('/users/me', { displayName: 'Ada', email: 'ada@example.com' })
+    )
+  })
+
+  it('does not register on other errors', async () => {
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
+    apiGet.mockRejectedValue(new ApiError(500, 'Internal Server Error'))
+    renderSignedIn()
+
+    await vi.waitFor(() => expect(consoleError).toHaveBeenCalled())
+    expect(apiPost).not.toHaveBeenCalled()
+    consoleError.mockRestore()
   })
 })

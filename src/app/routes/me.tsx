@@ -15,7 +15,7 @@ function MePage() {
   const { logout } = useAuth0()
   const userQ = useCurrentUser()
   const userId = userQ.data?.id ?? 0
-  const ticksQ = useTicksByUser(userId, { enabled: userId > 0 })
+  const ticksQ = useTicksByUser(userId)
   const updateM = useUpdateUser()
   const deleteM = useDeleteUser()
 

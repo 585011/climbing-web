@@ -62,6 +62,8 @@ export const UserRouteTickSchema = z.object({
   style: z.string().nullable().transform(v => v ?? ''),
   rating: z.number().nullable().transform(v => v ?? 0),
   personalNote: z.string().nullable().transform(v => v ?? ''),
+  /** Gym ticks only: short-lived (~15 min) presigned URL of the climber's own photo; absent until the API deploy that adds it. */
+  photoUrl: z.string().nullish().transform(v => v ?? null),
 })
 
 export type UserRouteTick = z.infer<typeof UserRouteTickSchema>
@@ -118,6 +120,15 @@ export type NewGymRouteInput = z.input<typeof NewGymRouteInputSchema>
  */
 export const WALL_IMAGE_MAX_BYTES = 20 * 1024 * 1024
 export const WALL_IMAGE_TYPES: readonly string[] = ['image/jpeg', 'image/png', 'image/webp']
+
+/**
+ * Gym tick photo limits, mirroring the backend (PUT /users/:id/ticks/:id/photo:
+ * 400 VALIDATION_ERROR / 413 PAYLOAD_TOO_LARGE). Photos are downscaled on the
+ * phone before upload, so the size cap is rarely hit. UX / defense-in-depth
+ * only — the backend is the authoritative validator.
+ */
+export const TICK_PHOTO_MAX_BYTES = 5 * 1024 * 1024
+export const TICK_PHOTO_TYPES: readonly string[] = ['image/jpeg', 'image/png', 'image/webp']
 
 /**
  * Display-name limits for the Me page. Mirrors the backend's

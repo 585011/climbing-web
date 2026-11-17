@@ -1,5 +1,7 @@
 # Production Deployment (Hetzner + Caddy + CD) Implementation Plan
 
+> **Superseded (2026-07-07):** production moved to Railway, which auto-builds the `Dockerfile` on every push to `main`. The Hetzner VM, GHCR images and SSH deploy workflow described here were dropped in commit `eee1b87`. Kept for history; see the Deployment section of `CLAUDE.md` for the current setup.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Ship the climbing app to production on one Hetzner VM (Caddy-served SPA + Spring Boot API + Postgres via docker compose) with SSH-push CD from GitHub Actions on every push to main.
