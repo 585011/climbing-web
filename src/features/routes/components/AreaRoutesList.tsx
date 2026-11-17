@@ -1,7 +1,7 @@
 import type { Wall } from '../../../types/api'
 import { useRoutesByWall } from '../hooks/useRoutesByWall'
 import { useTicksByUser } from '../../ticks/hooks/useTicksByUser'
-import { useDeleteTick } from '../../ticks/hooks/useDeleteTick'
+import { useRemoveTickWithUndo } from '../../ticks/hooks/useRemoveTickWithUndo'
 import { useCurrentUser } from '../../users/hooks/useCurrentUser'
 import { RouteRow } from './RouteRow'
 
@@ -15,11 +15,11 @@ function WallSection({ wall, showHeader }: WallSectionProps) {
   const { data: currentUser } = useCurrentUser()
   const userId = currentUser?.id ?? 0
   const { data: ticksMap = new Map() } = useTicksByUser(userId)
-  const { mutate: deleteTick } = useDeleteTick()
+  const removeTick = useRemoveTickWithUndo()
 
   const handleUntick = (routeId: number) => {
     const tick = ticksMap.get(routeId)
-    if (tick) deleteTick({ userId, tickId: tick.id })
+    if (tick) removeTick(userId, tick)
   }
 
   if (isLoading) return (

@@ -41,7 +41,7 @@ export const TicksAllList = ({ ticks, isLoading, isError, onRetry }: TicksAllLis
   const filtered = styleFilter ? byType.filter(t => t.tick.style === styleFilter) : byType
   const sorted =
     sortBy === 'grade'
-      ? [...filtered].sort((a, b) =>
+      ? filtered.toSorted((a, b) =>
           compareNorwegianGrades(a.route?.grade ?? '', b.route?.grade ?? ''),
         )
       : filtered // enrichTicks already sorts by date, newest first
@@ -79,6 +79,7 @@ export const TicksAllList = ({ ticks, isLoading, isError, onRetry }: TicksAllLis
                 <button
                   key={c.value}
                   onClick={() => setAreaType(c.value)}
+                  aria-pressed={areaType === c.value}
                   className={`shrink-0 text-[11px] rounded-full border px-3 py-1 ${
                     areaType === c.value ? 'bg-ink text-paper border-ink' : 'border-ink/25 text-ink-2 bg-paper'
                   }`}
@@ -94,6 +95,7 @@ export const TicksAllList = ({ ticks, isLoading, isError, onRetry }: TicksAllLis
             <div className="flex gap-2 overflow-x-auto no-scrollbar">
               <button
                 onClick={() => setStyleFilter('')}
+                aria-pressed={styleFilter === ''}
                 className={`shrink-0 text-[11px] rounded-full border px-3 py-1 ${
                   styleFilter === '' ? 'bg-ink text-paper border-ink' : 'border-ink/25 text-ink-2 bg-paper'
                 }`}
@@ -104,6 +106,7 @@ export const TicksAllList = ({ ticks, isLoading, isError, onRetry }: TicksAllLis
                 <button
                   key={c.value}
                   onClick={() => setStyleFilter(c.value)}
+                  aria-pressed={styleFilter === c.value}
                   className={`shrink-0 text-[11px] rounded-full border px-3 py-1 ${
                     styleFilter === c.value
                       ? 'bg-ink text-paper border-ink'

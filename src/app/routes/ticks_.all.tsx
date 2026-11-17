@@ -15,7 +15,7 @@ export const Route = createFileRoute('/ticks_/all')({
 function AllTicksPage() {
   const userQ = useCurrentUser()
   const userId = userQ.data?.id ?? 0
-  const ticksQ = useTicksByUser(userId, { enabled: userId > 0 })
+  const ticksQ = useTicksByUser(userId)
   // Include retired routes so ticks on rotated-out gym routes still resolve.
   const routesQ = useRoutes({ includeRetired: true })
   const wallsQ = useWalls()

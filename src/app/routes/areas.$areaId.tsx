@@ -85,12 +85,12 @@ function AreaPage() {
       {areaLoading ? (
         <div className="h-10 mx-4 bg-paper-2 animate-pulse rounded" />
       ) : (
-        <TabBar tabs={visibleTabs} active={activeTab} onChange={setActiveTab} />
+        <TabBar tabs={visibleTabs} active={activeTab} onChange={setActiveTab} label="Area sections" />
       )}
 
       {/* Tab content */}
       {!areaLoading && (
-        <div className="flex-1">
+        <div className="flex-1" role="tabpanel" aria-label={activeTab}>
           {activeTab === 'Walls' && (
             <div className="flex flex-col gap-2 px-4 py-3">
               {wallsLoading

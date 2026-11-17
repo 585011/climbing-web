@@ -27,7 +27,7 @@ function LogTickPage() {
   const { data: route, isLoading: routeLoading, isError } = useRoute(routeIdNum)
   const { data: currentUser } = useCurrentUser()
   const userId = currentUser?.id ?? 0
-  const { data: ticksMap = new Map() } = useTicksByUser(userId, { enabled: userId > 0 })
+  const { data: ticksMap = new Map() } = useTicksByUser(userId)
   const existingTick = route ? (ticksMap.get(route.id) ?? null) : null
 
   const [style, setStyle] = useState('')
@@ -140,13 +140,14 @@ function LogTickPage() {
             <button
               key={s.value}
               onClick={() => setStyle(style === s.value ? '' : s.value)}
+              aria-pressed={style === s.value}
               className={`flex items-center gap-3 w-full text-left rounded-xl border px-4 py-3 transition-colors ${
                 style === s.value
                   ? 'border-accent bg-accent/5'
                   : 'border-ink/15 bg-paper'
               }`}
             >
-              <span className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${
+              <span aria-hidden className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${
                 style === s.value ? 'border-accent' : 'border-ink/30'
               }`}>
                 {style === s.value && (
@@ -175,6 +176,8 @@ function LogTickPage() {
             <button
               key={star}
               onClick={() => setRating(star === rating ? 0 : star)}
+              aria-label={`${star} star`}
+              aria-pressed={star === rating}
               className={`text-[28px] leading-none ${star <= rating ? 'text-accent' : 'text-ink/20'}`}
             >
               ★

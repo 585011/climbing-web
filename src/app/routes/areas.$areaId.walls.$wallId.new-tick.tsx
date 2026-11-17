@@ -113,7 +113,7 @@ function NewGymTickPage() {
         <p className="text-[15px] uppercase tracking-widest text-ink-3 mb-2">Type</p>
         <div className="flex gap-2 flex-wrap">
           {DISCIPLINES.map(d => (
-            <button key={d.value} onClick={() => setDiscipline(d.value)} className={chipClass(discipline === d.value)}>
+            <button key={d.value} onClick={() => setDiscipline(d.value)} aria-pressed={discipline === d.value} className={chipClass(discipline === d.value)}>
               {d.label}
             </button>
           ))}
@@ -193,7 +193,7 @@ function NewGymTickPage() {
         <p className="text-[15px] uppercase tracking-widest text-ink-3 mb-3">How did you send it?</p>
         <div className="flex gap-2 flex-wrap">
           {TICK_STYLES.map(s => (
-            <button key={s.value} onClick={() => setStyle(style === s.value ? '' : s.value)} className={chipClass(style === s.value)}>
+            <button key={s.value} onClick={() => setStyle(style === s.value ? '' : s.value)} aria-pressed={style === s.value} className={chipClass(style === s.value)}>
               {s.label}
             </button>
           ))}
@@ -209,6 +209,7 @@ function NewGymTickPage() {
               key={star}
               onClick={() => setRating(star === rating ? 0 : star)}
               aria-label={`${star} star`}
+              aria-pressed={star === rating}
               className={`text-[28px] leading-none ${star <= rating ? 'text-accent' : 'text-ink/20'}`}
             >
               ★

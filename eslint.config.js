@@ -25,4 +25,10 @@ export default defineConfig([
       globals: globals.browser,
     },
   },
+  {
+    // TanStack file routes export `Route` next to a local page component by
+    // convention, so this rule can only produce noise here.
+    files: ['src/app/routes/**/*.tsx'],
+    rules: { 'react-refresh/only-export-components': 'off' },
+  },
 ])

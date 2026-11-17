@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react'
 import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch'
 
 interface WallImageViewerProps {
@@ -6,10 +7,26 @@ interface WallImageViewerProps {
   onClose: () => void
 }
 
-/** Fullscreen overlay with pinch-zoom / pan / double-tap zoom. */
+/**
+ * Fullscreen overlay with pinch-zoom / pan / double-tap zoom. A native modal
+ * <dialog> gives focus containment, an inert page behind it, and Esc /
+ * back-gesture dismissal for free (all routed through `onClose`).
+ */
 export function WallImageViewer({ src, alt, onClose }: WallImageViewerProps) {
+  const dialogRef = useRef<HTMLDialogElement>(null)
+
+  useEffect(() => {
+    const dialog = dialogRef.current
+    if (dialog && !dialog.open) dialog.showModal()
+  }, [])
+
   return (
-    <div className="fixed inset-0 z-50 bg-ink/95" role="dialog" aria-modal="true">
+    <dialog
+      ref={dialogRef}
+      onClose={onClose}
+      aria-label={alt}
+      className="m-0 h-dvh max-h-none w-dvw max-w-none border-0 bg-ink/95 p-0"
+    >
       <button
         onClick={onClose}
         aria-label="Close"
@@ -25,6 +42,6 @@ export function WallImageViewer({ src, alt, onClose }: WallImageViewerProps) {
           <img src={src} alt={alt} className="max-w-full max-h-full object-contain" />
         </TransformComponent>
       </TransformWrapper>
-    </div>
+    </dialog>
   )
 }

@@ -22,14 +22,21 @@ describe('apiClient.putMultipart', () => {
     expect(url).toContain('/walls/5/image')
     expect(init.method).toBe('PUT')
     expect(init.body).toBe(form)
-    expect(init.headers).not.toHaveProperty('Content-Type')
+    expect(init.headers.has('Content-Type')).toBe(false)
   })
 
   it('still sets Content-Type for JSON requests', async () => {
     fetchMock.mockResolvedValue(okJson({}))
     await apiClient.post('/walls', { name: 'x' })
     const [, init] = fetchMock.mock.calls[0]
-    expect(init.headers['Content-Type']).toBe('application/json')
+    expect(init.headers.get('Content-Type')).toBe('application/json')
+  })
+
+  it('sends no Content-Type on bodiless GETs (avoids a CORS preflight)', async () => {
+    fetchMock.mockResolvedValue(okJson({}))
+    await apiClient.get('/walls')
+    const [, init] = fetchMock.mock.calls[0]
+    expect(init.headers.has('Content-Type')).toBe(false)
   })
 })
 

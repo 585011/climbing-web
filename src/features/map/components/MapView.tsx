@@ -56,6 +56,7 @@ const MapView = ({ areas, selectedId, onSelect }: MapViewProps) => {
       zoom: 4,
     })
     mapRef.current = map
+    const markers = markersRef.current
 
     // The init effect runs before the browser flushes layout, so the
     // container can still be 0×0 when MapLibre measures it — leaving the
@@ -79,7 +80,7 @@ const MapView = ({ areas, selectedId, onSelect }: MapViewProps) => {
       const marker = new maplibregl.Marker({ element: el })
         .setLngLat([area.longitude, area.latitude])
         .addTo(map)
-      markersRef.current.set(area.id, marker)
+      markers.set(area.id, marker)
       bounds.extend([area.longitude, area.latitude])
     }
     if (!bounds.isEmpty()) map.fitBounds(bounds, { padding: 48, maxZoom: 12, duration: 0 })
@@ -88,7 +89,7 @@ const MapView = ({ areas, selectedId, onSelect }: MapViewProps) => {
       resizeObserver.disconnect()
       map.remove()
       mapRef.current = null
-      markersRef.current.clear()
+      markers.clear()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -137,7 +138,7 @@ const MapView = ({ areas, selectedId, onSelect }: MapViewProps) => {
       className={
         fullscreen
           ? 'fixed inset-0 z-[1000] overflow-hidden bg-paper'
-          : 'relative h-[60vh] w-full overflow-hidden rounded-xl border border-ink/15'
+          : 'relative h-[60dvh] w-full overflow-hidden rounded-xl border border-ink/15'
       }
     >
       {/* h-full/w-full, NOT absolute inset-0: MapLibre's stylesheet sets

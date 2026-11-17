@@ -11,7 +11,6 @@ export class ApiError extends Error {
   errorCode?: string
 
   constructor(status: number, statusText: string, errorCode?: string) {
-    // Keep the `<status> <statusText>` format — provider.tsx matches on it.
     super(`${status} ${statusText}`)
     this.name = 'ApiError'
     this.status = status
@@ -20,14 +19,15 @@ export class ApiError extends Error {
 }
 
 async function request(path: string, init?: RequestInit): Promise<unknown> {
-    const headers: Record<string, string> = {}
-    // FormData must set its own multipart boundary — no manual Content-Type.
-    if (!(init?.body instanceof FormData)) {
-        headers['Content-Type'] = 'application/json'
+    const headers = new Headers(init?.headers)
+    // Only JSON bodies get a Content-Type: on a GET/DELETE it would force a CORS
+    // preflight round-trip, and FormData must set its own multipart boundary.
+    if (typeof init?.body === 'string') {
+        headers.set('Content-Type', 'application/json')
     }
     if (getToken) {
         const token = await getToken()
-        headers['Authorization'] = `Bearer ${token}`
+        headers.set('Authorization', `Bearer ${token}`)
     }
     const res = await fetch(`${API_BASE}${path}`, {
         ...init,

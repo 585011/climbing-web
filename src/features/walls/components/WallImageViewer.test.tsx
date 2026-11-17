@@ -21,4 +21,14 @@ describe('WallImageViewer', () => {
     fireEvent.click(screen.getByRole('button', { name: /close/i }))
     expect(onClose).toHaveBeenCalledOnce()
   })
+
+  it('opens as a native modal dialog and reports native closes (Esc / back gesture)', () => {
+    const onClose = vi.fn()
+    render(<WallImageViewer src="https://r2.example/img.jpg" alt="Main Wall" onClose={onClose} />)
+
+    const dialog = screen.getByRole('dialog', { name: 'Main Wall' }) as HTMLDialogElement
+    expect(dialog.open).toBe(true)
+    dialog.close()
+    expect(onClose).toHaveBeenCalledOnce()
+  })
 })

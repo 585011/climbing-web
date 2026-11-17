@@ -16,7 +16,7 @@ docker build -t climbing-web .   # Build image (args: VITE_API_URL, VITE_AUTH0_D
 docker run -p 8000:80 climbing-web   # Run (Caddy, plain HTTP; set -e DOMAIN=<host> for automatic HTTPS)
 ```
 
-Tests use **Vitest** + **@testing-library/react** (jsdom). Setup is `src/testing/setup.ts`; config lives in the `test` block of `vite.config.ts`. Co-locate `*.test.ts(x)` next to the code under test — the TanStack Router plugin ignores them via `routeFileIgnorePattern: '\\.test\\.'`, so test files in the routes dir never enter `routeTree.gen.ts`.
+Tests use **Vitest** + **@testing-library/react** (jsdom). Setup is `src/testing/setup.ts`; config lives in the `test` block of `vite.config.ts`. Co-locate `*.test.ts(x)` next to the code under test — the TanStack Router plugin ignores them via `routeFileIgnorePattern: '\\.test\\.'`, so test files in the routes dir never enter `routeTree.gen.ts`. jsdom lacks `HTMLDialogElement.showModal()`/`close()`; `setup.ts` stubs them (`close()` fires the `close` event). jsdom also hides `[popover]` without offering `showPopover()`, so `setup.ts` forces `[popover]` visible — tests run the no-popover-support fallback path.
 
 ## Stack
 
@@ -62,7 +62,7 @@ Kotlin + Spring Boot 3.5 REST API backed by PostgreSQL — repo: https://github.
 
 ## UX target
 
-Primary users are climbers at outdoor crags on mobile — design for one-handed use and bright sunlight. Prioritise legibility and large tap targets over information density.
+Primary users are climbers at outdoor crags on mobile — design for one-handed use and bright sunlight. Prioritise legibility and large tap targets over information density. The site is **mobile-first, touch-only**: don't add keyboard-specific work (arrow-key navigation, roving tabindex, `focusgroup`). Screen-reader semantics (roles, labels, `aria-pressed`) still apply.
 
 ## Layout shell
 
@@ -126,6 +126,16 @@ return z.array(WallSchema).parse(raw)
 
 **Input validation:** Validate user-supplied write payloads with a dedicated request schema before sending — e.g. tick writes parse through `TickInputSchema` in `createTick`/`updateTick` (trims strings, caps the note, bounds the rating). Keep the response schema (`UserRouteTickSchema`) lenient; it parses server data, not user input. Length limits live as named constants (`PERSONAL_NOTE_MAX`) reused by the field's `maxLength`, its counter, and the schema — one source of truth. Treat all of this as **UX / defense-in-depth, not a security boundary**: the backend is the authoritative validator and must enforce the same limits. Never render user input with `dangerouslySetInnerHTML` — always go through React's default JSX escaping (`{value}`). Debounce input that drives requests/expensive work via `useDebouncedValue` (`src/hooks/`).
 
+**API errors:** Branch on `err instanceof ApiError && err.status === …` (from `lib/api-client.ts`), never on `err.message` strings. `apiClient` sets `Content-Type: application/json` only when there's a JSON body — a Content-Type on GET/DELETE would force a CORS preflight on every request.
+
+**Accessibility & platform:**
+- Overlays that block the page use a native `<dialog>` opened with `ref.current.showModal()` (see `WallImageViewer`) and `onClose` for Esc/back-gesture — never a `div role="dialog"`, and no hand-rolled focus traps or Esc handlers.
+- Selectable chips / toggle buttons (filters, tick style, star rating) set `aria-pressed`; icon-only or glyph buttons need an `aria-label`, and decorative glyphs (`⌕`, `▾`) get `aria-hidden`.
+- In-page tabs use `TabBar` (pass `label`) and wrap the active content in `role="tabpanel"`. Don't use tab roles for page navigation (`BottomNav` uses links + `aria-current`).
+- Use dynamic viewport units (`min-h-dvh`, `h-[60dvh]`), not `vh`/`min-h-screen` — `vh` ignores the mobile browser toolbar.
+- Toasts: call `showToast({ message, actionLabel?, onAction?, onDismiss? })` from `src/stores/toast.ts`; `<ToastRegion />` in `__root.tsx` renders it (one at a time, 5 s, `popover="manual"` with a plain fixed-element fallback). `onDismiss` runs on timeout, ✕, or when a newer toast replaces it — so put deferred work there (see `useRemoveTickWithUndo`: the tick is marked pending in `features/ticks/utils/pendingTickRemovals.ts` and `useTicksByUser` filters it out everywhere, even across refetches; the `DELETE` only fires on dismiss, Undo just un-marks it).
+- Prefer non-mutating array methods (`toSorted`, `toReversed`, `findLast`) over `[...arr].sort()`; the tsconfig targets ES2023.
+
 **Domain type naming:** The climbing route data model is `ClimbingRoute` (not `Route`) in `src/types/api.ts`. TanStack Router requires every route file to export `const Route = createFileRoute(...)`, so using `Route` as a domain type name causes a collision. Follow the same pattern for any future domain types that clash with framework names.
 
 **TanStack Query keys:** Use a hierarchical `[entity, ...params]` pattern so cache invalidation is predictable:
@@ -139,7 +149,7 @@ return z.array(WallSchema).parse(raw)
 | `useWallsByArea(areaId)` | `['areas', areaId, 'walls']` |
 | `useRoutesByWall(wallId)` | `['walls', wallId, 'routes']` |
 | `useRoute(id)` | `['routes', id]` |
-| `useTicksByUser(userId)` | `['users', userId, 'ticks']` |
+| `useTicksByUser(userId)` | `['users', userId, 'ticks']` (disabled until `userId > 0`, so pass `currentUser?.id ?? 0` as-is) |
 | `useCurrentUser()` | `['users', 'me']` |
 
 **URL param parsing:** TanStack Router provides URL params as strings. Always parse with `Number()` and guard with `Number.isNaN()` before passing to queries:
@@ -164,7 +174,7 @@ if (Number.isNaN(id)) return <p>Invalid URL</p>
 
 ## ESLint
 
-`eslint.config.js` uses flat config with `typescript-eslint`, `eslint-plugin-react-hooks`, and `eslint-plugin-react-refresh`. Type-aware rules are **not** enabled yet — if upgrading, add `tseslint.configs.recommendedTypeChecked` and set `parserOptions.project` in the config.
+`eslint.config.js` uses flat config with `typescript-eslint`, `eslint-plugin-react-hooks`, and `eslint-plugin-react-refresh`. The `react-refresh/only-export-components` rule is turned off for `src/app/routes/**`, because route files have to export `Route` next to a local page component. Type-aware rules are **not** enabled yet — if upgrading, add `tseslint.configs.recommendedTypeChecked` and set `parserOptions.project` in the config.
 
 ## Code guidelines
 

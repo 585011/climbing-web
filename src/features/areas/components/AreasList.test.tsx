@@ -42,7 +42,7 @@ describe('AreasList search', () => {
     expect(screen.getByText('Bergen')).toBeInTheDocument()
     expect(screen.getByText('Oslo')).toBeInTheDocument()
 
-    fireEvent.change(screen.getByPlaceholderText('Search crags, routes…'), {
+    fireEvent.change(screen.getByPlaceholderText('Search crags'), {
       target: { value: 'berg' },
     })
 
@@ -58,7 +58,7 @@ describe('AreasList search', () => {
 
   it('caps the search input length', () => {
     render(<AreasList />)
-    expect(screen.getByPlaceholderText('Search crags, routes…')).toHaveAttribute(
+    expect(screen.getByPlaceholderText('Search crags')).toHaveAttribute(
       'maxlength',
       '100',
     )

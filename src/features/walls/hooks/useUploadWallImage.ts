@@ -8,6 +8,7 @@ export const useUploadWallImage = () => {
       uploadWallImage(wallId, file),
     onSuccess: (wall) => {
       queryClient.invalidateQueries({ queryKey: ['walls', wall.id] })
+      queryClient.invalidateQueries({ queryKey: ['walls'], exact: true }) // Explore crag thumbnails
       queryClient.invalidateQueries({ queryKey: ['areas', wall.areaId, 'walls'] })
     },
   })
